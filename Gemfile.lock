@@ -68,6 +68,7 @@ GEM
       tzinfo (~> 2.0)
     bootsnap (1.15.0)
       msgpack (~> 1.2)
+    bson (4.15.0)
     builder (3.2.4)
     concurrent-ruby (1.1.10)
     crass (1.0.6)
@@ -95,6 +96,12 @@ GEM
     method_source (1.0.0)
     mini_mime (1.1.2)
     minitest (5.17.0)
+    mongo (2.18.2)
+      bson (>= 4.14.1, < 5.0.0)
+    mongoid (8.0.3)
+      activemodel (>= 5.1, < 7.1, != 7.0.0)
+      mongo (>= 2.18.0, < 3.0.0)
+      ruby2_keywords (~> 0.0.5)
     msgpack (1.6.0)
     net-imap (0.3.4)
       date
@@ -143,6 +150,7 @@ GEM
     rake (13.0.6)
     reline (0.3.2)
       io-console (~> 0.5)
+    ruby2_keywords (0.0.5)
     sqlite3 (1.5.4-x86_64-linux)
     thor (1.2.1)
     timeout (0.3.1)
@@ -159,6 +167,7 @@ PLATFORMS
 DEPENDENCIES
   bootsnap
   debug
+  mongoid
   puma (~> 5.0)
   rails (~> 7.0.4)
   sqlite3 (~> 1.4)
