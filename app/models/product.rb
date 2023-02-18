@@ -1,0 +1,15 @@
+class Product
+  include Mongoid::Document
+  include Mongoid::Timestamps
+  field :title, type: String
+  field :description, type: String, default: ""
+  field :price, type: Integer
+  field :quantity, type: Integer
+  field :images, type: Array, default: []
+  has_and_belongs_to_many :categories
+
+  validates :title, presence: true
+  validates :images, length: {minimum: 1, maximum: 3}
+  validates :price, numericality: {only_integer: true, greater_than_or_equal_to: 300}
+  validates :quantity, numericality: {only_integer: true, greater_than_or_equal_to: 1}
+end
