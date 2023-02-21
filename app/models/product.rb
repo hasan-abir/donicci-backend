@@ -7,6 +7,9 @@ class Product
   field :quantity, type: Integer
   field :images, type: Array, default: []
   has_and_belongs_to_many :categories
+  has_many :cart_items
+  has_many :reviews
+  has_many :ratings
 
   validates :title, presence: true
   validates :images, length: {minimum: 1, maximum: 3}

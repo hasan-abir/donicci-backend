@@ -6,6 +6,9 @@ class User
   field :password_hash, type: String
   field :password_salt, type: String
   has_and_belongs_to_many :roles
+  has_many :cart_items
+  has_many :reviews
+  has_many :ratings
 
   validates :username, presence: true, uniqueness: true
   validates :email, presence: true, uniqueness: true, format: {with: /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i}
