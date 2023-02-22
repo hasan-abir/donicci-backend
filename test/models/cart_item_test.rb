@@ -16,6 +16,7 @@ class CartItemTest < ActiveSupport::TestCase
     cart_item.selected_quantity = nil
 
     assert_not cart_item.save
+    assert cart_item.errors.full_messages.include? "Selected quantity must be provided"
   end
 
   test "should not save when selected_quantity isn't number" do
@@ -23,6 +24,7 @@ class CartItemTest < ActiveSupport::TestCase
     cart_item.selected_quantity = 1.5
 
     assert_not cart_item.save
+    assert cart_item.errors.full_messages.include? "Selected quantity must be an integer"
   end
 
   test "should not save when selected_quantity is less than 1" do
@@ -30,6 +32,7 @@ class CartItemTest < ActiveSupport::TestCase
     cart_item.selected_quantity = 0
 
     assert_not cart_item.save
+    assert cart_item.errors.full_messages.include? "Selected quantity must be greater than or equal to 1"
   end
 
   def cart_item_instance(quantity = 10) 

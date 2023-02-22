@@ -4,5 +4,5 @@ class Role
   field :name, type: String
   has_and_belongs_to_many :users
 
-  validates :name, presence: true, uniqueness: true, inclusion: {in: %w(ROLE_USER ROLE_ADMIN)}
+  validates :name, presence: { message: "must be provided" }, uniqueness: { message: "'%{value}' already exists" }, inclusion: {in: %w(ROLE_USER ROLE_ADMIN), message: "must include: ROLE_USER | ROLE_ADMIN" }
 end

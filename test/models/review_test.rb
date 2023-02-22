@@ -16,6 +16,7 @@ class ReviewTest < ActiveSupport::TestCase
     review.title = nil
 
     assert_not review.save
+    assert review.errors.full_messages.include? "Title must be provided"
   end
 
   test "should not save when description isn't provided" do
@@ -23,6 +24,7 @@ class ReviewTest < ActiveSupport::TestCase
     review.description = nil
 
     assert_not review.save
+    assert review.errors.full_messages.include? "Description must be provided"
   end
 
   def review_instance(title = "Great", description = "Lorem") 

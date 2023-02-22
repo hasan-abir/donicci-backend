@@ -28,6 +28,7 @@ class UserTest < ActiveSupport::TestCase
     user = user_instance
     user.username = nil
     assert_not user.save
+    assert user.errors.full_messages.include? "Username must be provided"
   end
 
   test "should not save when username already exists" do
@@ -36,18 +37,22 @@ class UserTest < ActiveSupport::TestCase
 
     userCopy = user_instance
     assert_not userCopy.save
+    assert userCopy.errors.full_messages.include? "Username 'Test' already exists"
+    assert userCopy.errors.full_messages.include? "Email 'test@test.com' already exists"
   end
 
   test "should not save when email isn't provided" do
     user = user_instance
     user.email = nil
     assert_not user.save
+    assert user.errors.full_messages.include? "Email must be provided"
   end
 
   test "should not save when email isn't valid" do
     user = user_instance
     user.email = "testtest.com"
     assert_not user.save
+    assert user.errors.full_messages.include? "Email is invalid"
   end
 
   test "should not save when email already exists" do
@@ -56,18 +61,21 @@ class UserTest < ActiveSupport::TestCase
 
     userCopy = user_instance("Test 2")
     assert_not userCopy.save
+    assert userCopy.errors.full_messages.include? "Email 'test@test.com' already exists"
   end
 
   test "should not save when password_hash isn't provided" do
     user = user_instance
     user.password_hash = nil
     assert_not user.save
+    assert user.errors.full_messages.include? "Password hash can't be blank"
   end
 
   test "should not save when password_salt isn't provided" do
     user = user_instance
     user.password_salt = nil
     assert_not user.save
+    assert user.errors.full_messages.include? "Password salt can't be blank"
   end
 
   def user_instance(username = "Test", email = "test@test.com")

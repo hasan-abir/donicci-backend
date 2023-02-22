@@ -6,6 +6,6 @@ class Review
   belongs_to :product
   belongs_to :user
 
-  validates :title, presence: true
-  validates :description, presence: true
+  validates :title, presence: { message: "must be provided" }
+  validates :description, presence: { message: "must be provided" }
 end

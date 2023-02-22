@@ -11,8 +11,8 @@ class Product
   has_many :reviews
   has_many :ratings
 
-  validates :title, presence: true
-  validates :images, length: {minimum: 1, maximum: 3}
+  validates :title, presence: { message: "must be provided" }
+  validates :images, length: {minimum: 1, maximum: 3, message: "length should be between 1 and 3"}
   validates :price, numericality: {only_integer: true, greater_than_or_equal_to: 300}
   validates :quantity, numericality: {only_integer: true, greater_than_or_equal_to: 1}
 end

@@ -16,6 +16,7 @@ class RatingTest < ActiveSupport::TestCase
     rating.score = nil
 
     assert_not rating.save
+    assert rating.errors.full_messages.include? "Score must be provided"
   end
 
   test "should not save when score isn't number" do
@@ -23,6 +24,7 @@ class RatingTest < ActiveSupport::TestCase
     rating.score = 1.5
 
     assert_not rating.save
+    assert rating.errors.full_messages.include? "Score must be an integer"
   end
 
   test "should not save when score is less than 1" do
@@ -30,6 +32,7 @@ class RatingTest < ActiveSupport::TestCase
     rating.score = 0
 
     assert_not rating.save
+    assert rating.errors.full_messages.include? "Score must be greater than or equal to 1"
   end
 
   test "should not save when score is more than 5" do
@@ -37,6 +40,7 @@ class RatingTest < ActiveSupport::TestCase
     rating.score = 6
 
     assert_not rating.save
+    assert rating.errors.full_messages.include? "Score must be less than or equal to 5"
   end
 
   def rating_instance(score = 4) 

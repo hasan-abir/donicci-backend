@@ -28,6 +28,7 @@ class CategoryTest < ActiveSupport::TestCase
     category.name = nil
 
     assert_not category.save
+    assert category.errors.full_messages.include? "Name must be provided"
   end
 
   def product_instance(product_title = "test product") 

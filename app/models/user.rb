@@ -10,8 +10,8 @@ class User
   has_many :reviews
   has_many :ratings
 
-  validates :username, presence: true, uniqueness: true
-  validates :email, presence: true, uniqueness: true, format: {with: /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i}
+  validates :username, presence: { message: "must be provided" }, uniqueness: { message: "'%{value}' already exists" }
+  validates :email, presence: { message: "must be provided" }, uniqueness: { message: "'%{value}' already exists" }, format: {with: /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i}
   validates :password_hash, presence: true
   validates :password_salt, presence: true
 end
