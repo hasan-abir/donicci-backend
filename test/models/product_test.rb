@@ -12,15 +12,32 @@ class ProductTest < ActiveSupport::TestCase
 
   test "does save with categories" do
     category1 = category_instance("category 1")
-    category1.save
+    assert category1.save
     category2 = category_instance("category 2")
-    category2.save
+    assert category2.save
     product = product_instance
     product.categories.push(category1)
     product.categories.push(category2)
 
     assert product.save
     assert_equal(2, product.categories.length)
+  end
+
+  test "does save not with categories more than 5" do
+    product = product_instance
+
+    x = 1
+
+    while x <= 6
+      category = category_instance("category " + x.to_s)
+      category.save
+
+      product.categories.push(category)
+      x = x + 1
+    end
+
+    assert_not product.save
+    assert product.errors.full_messages.include? "Categories length should be 5 and less"
   end
 
   test "does not save when title is nil" do

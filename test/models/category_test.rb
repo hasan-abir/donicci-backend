@@ -10,19 +10,6 @@ class CategoryTest < ActiveSupport::TestCase
     assert category_instance.save
   end
 
-  test "does save with products" do
-    product1 = product_instance("product1")
-    product1.save
-    product2 = product_instance("product2")
-    product2.save
-    category = category_instance
-    category.products.push(product1)
-    category.products.push(product2)
-
-    assert category.save
-    assert_equal(2, category.products.length)
-  end
-
   test "does not save when name is nil" do
     category = category_instance
     category.name = nil

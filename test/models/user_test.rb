@@ -13,8 +13,8 @@ class UserTest < ActiveSupport::TestCase
   test "should save with roles" do
     adminRole = role_instance("ROLE_ADMIN")
     userRole = role_instance
-    adminRole.save
-    userRole.save
+    assert adminRole.save
+    assert userRole.save
 
     user = user_instance
     user.roles.push(adminRole)
@@ -22,6 +22,9 @@ class UserTest < ActiveSupport::TestCase
 
     assert_equal(2, user.roles.length)
     assert user.save
+
+    assert adminRole.save
+    assert userRole.save
   end
 
   test "should not save when username isn't provided" do

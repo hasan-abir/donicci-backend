@@ -5,7 +5,7 @@ class User
   field :email, type: String
   field :password_hash, type: String
   field :password_salt, type: String
-  has_and_belongs_to_many :roles
+  has_and_belongs_to_many :roles, inverse_of: nil
   has_many :cart_items
   has_many :reviews
   has_many :ratings
