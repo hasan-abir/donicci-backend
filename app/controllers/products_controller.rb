@@ -1,5 +1,5 @@
 class ProductsController < ApplicationController
-    before_action :set_product, only: [:show, :destroy, :update]
+    before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
 
     def index
         limit = params[:limit] ? params[:limit] : 5
@@ -10,10 +10,16 @@ class ProductsController < ApplicationController
     end
 
     def show
+        @product[:category_list] = @product.categories.only(:_id, :name)
+
         render json: @product
     end
 
     def create
+        if !params[:product]
+            return render json: {msg: "Requires 'product' in request body"}.to_json, status: 400
+        end
+
         product = Product.new()
         product.title = params[:product][:title]
         
@@ -34,6 +40,8 @@ class ProductsController < ApplicationController
         if product.errors.full_messages.length > 0
             render json: {msgs: product.errors.full_messages}.to_json, status: 400
         else
+            product[:category_list] = product.categories.only(:_id, :name)
+
             render json: product
         end
     end
@@ -64,8 +72,50 @@ class ProductsController < ApplicationController
         if @product.errors.full_messages.length > 0
             render json: {msgs: @product.errors.full_messages}.to_json, status: 400
         else
+            @product[:category_list] = @product.categories.only(:_id, :name)
+
             render json: @product
         end
+    end
+
+    def add_categories
+        if !params[:category_ids] || params[:category_ids].class != Array
+            return render json: {msg: "Requires 'category_ids' in request body"}.to_json, status: 400
+        end
+
+        for i in params[:category_ids] do
+            category = Category.find(i)
+
+            if category
+                @product.categories.push(category)
+            end
+        end
+
+        @product.save
+
+        @product[:category_list] = @product.categories.only(:_id, :name)
+
+        render json: @product
+    end
+
+    def remove_categories
+        if !params[:category_ids] || params[:category_ids].class != Array
+            return render json: {msg: "Requires 'category_ids' in request body"}.to_json, status: 400
+        end
+
+        for i in params[:category_ids] do
+            category = Category.find(i)
+
+            if category
+                @product.categories.delete(category)
+            end
+        end
+
+        @product.save
+
+        @product[:category_list] = @product.categories.only(:_id, :name)
+
+        render json: @product
     end
 
     def set_product

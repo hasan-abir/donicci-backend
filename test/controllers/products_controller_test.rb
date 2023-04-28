@@ -76,6 +76,25 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal product[:title], response["title"]
   end
 
+  test "show: finds one with categories" do
+    category1 = category_instance("category 1")
+    assert category1.save
+    category2 = category_instance("category 2")
+    assert category2.save
+    product = product_instance
+    product.categories.push(category1)
+    product.categories.push(category2)
+    product.save
+    
+    get "/products/" + product._id
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 2, response["category_list"].length
+    assert_equal category1.name, response["category_list"][0]["name"]
+    assert_equal category2.name, response["category_list"][1]["name"]
+  end
+
   test "show: 404 when not found" do
     get "/products/" + "123"
 
@@ -93,6 +112,14 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     productsSaved = Product.all
     assert_equal 1, productsSaved.length
+  end
+
+  test "create: returns error without product" do
+    post "/products/", params: {}
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert_equal "Requires 'product' in request body", response["msg"]
   end
 
   test "create: doesn't save product with empty title" do
@@ -350,6 +377,75 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 400, @response.status
   end
 
+  test "add_categories: adds categories to product" do
+    category1 = category_instance("category 1")
+    category2 = category_instance("category 2")
+    category1.save
+    category2.save
+    product = product_instance
+    product.save
+
+    category_ids = []
+    category_ids.push(category1._id)
+    category_ids.push(category2._id)
+
+    updatedProduct = {category_ids: category_ids}
+
+    put "/products/" + product._id + "/categories", params: updatedProduct 
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 2, response["category_list"].length
+    assert_equal category1.name, response["category_list"][0]["name"]
+    assert_equal category2.name, response["category_list"][1]["name"]
+  end
+
+  test "add_categories: returns error without category_ids" do
+    product = product_instance
+    product.save
+
+    put "/products/" + product._id + "/categories", params: {}
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert_equal "Requires 'category_ids' in request body", response["msg"]
+  end
+
+  test "remove_categories: adds categories to product" do
+    category1 = category_instance("category 1")
+    category2 = category_instance("category 2")
+    category3 = category_instance("category 3")
+    category1.save
+    category2.save
+    category3.save
+    product = product_instance
+    product.category_ids.push(category1._id)
+    product.category_ids.push(category2._id)
+    product.save
+
+    category_ids = []
+    category_ids.push(category2._id)
+
+    updatedProduct = {category_ids: category_ids}
+
+    put "/products/" + product._id + "/categories/remove", params: updatedProduct 
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 1, response["category_list"].length
+    assert_equal category1.name, response["category_list"][0]["name"]
+  end
+
+  test "remove_categories: returns error without category_ids" do
+    product = product_instance
+    product.save
+
+    put "/products/" + product._id + "/categories/remove", params: {}
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert_equal "Requires 'category_ids' in request body", response["msg"]
+  end
 
   def product_instance(product_title = "test product") 
     product = Product.new
