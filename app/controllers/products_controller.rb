@@ -5,7 +5,16 @@ class ProductsController < ApplicationController
         limit = params[:limit] ? params[:limit] : 5
         nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
 
-        products = Product.where(:updated_at.lt => nextPage).limit(limit).order_by(updated_at: "desc")
+        if params[:category_id] && params[:search_term]
+            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).order_by(updated_at: "desc")
+        elsif params[:search_term] && !params[:category_id]
+            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage).limit(limit).order_by(updated_at: "desc")
+        elsif params[:category_id] && !params[:search_term]
+            products = Product.where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).order_by(updated_at: "desc")
+        else
+            products = Product.where(:updated_at.lt => nextPage).limit(limit).order_by(updated_at: "desc")
+        end
+
         render json: products
     end
 
@@ -16,19 +25,34 @@ class ProductsController < ApplicationController
     end
 
     def create
+        emptyReqBodyMsg = "Requires 'product' in request body with fields:"
+
+        for i in Product.attribute_names do
+            if !['_id', 'created_at', 'updated_at', 'category_ids'].include? i
+                if i == "description"
+                    emptyReqBodyMsg.concat(" " + i + "(optional)")       
+                else
+                    emptyReqBodyMsg.concat(" " + i)       
+                end
+            end
+        end
+
         if !params[:product]
-            return render json: {msg: "Requires 'product' in request body"}.to_json, status: 400
+            return render json: {msg: emptyReqBodyMsg}.to_json, status: 400
         end
 
         product = Product.new()
         product.title = params[:product][:title]
+        product.description = params[:product][:description] || ""
         
         images = []
 
-        for i in params[:product][:images] do
-            if i.class == ActionController::Parameters
-                image = i.permit([:fileId, :url]).to_h
-                images.push(image)
+        if params[:product][:images].class == Array
+            for i in params[:product][:images] do
+                if i.class == ActionController::Parameters
+                    image = i.permit([:fileId, :url]).to_h
+                    images.push(image)
+                end
             end
         end
 
@@ -53,11 +77,20 @@ class ProductsController < ApplicationController
     end
 
     def update  
+        emptyReqBodyMsg = "Requires 'product' in request body with fields:"
+
+        for i in Product.attribute_names do
+            if !['_id', 'created_at', 'updated_at', 'category_ids'].include? i
+                emptyReqBodyMsg.concat(" " + i + "(optional)")       
+            end
+        end
+        
         if !params[:product]
-            return render json: {msg: "Requires 'product' in request body"}.to_json, status: 400
+            return render json: {msg: emptyReqBodyMsg}.to_json, status: 400
         end
         
         @product.title = params[:product][:title].presence || @product.title
+        @product.description = params[:product][:description].presence || @product.description
         
         newImages = params[:product][:images].presence
         if newImages != nil
@@ -80,7 +113,7 @@ class ProductsController < ApplicationController
 
     def add_categories
         if !params[:category_ids] || params[:category_ids].class != Array
-            return render json: {msg: "Requires 'category_ids' in request body"}.to_json, status: 400
+            return render json: {msg: "Requires 'category_ids' array in request body"}.to_json, status: 400
         end
 
         for i in params[:category_ids] do
@@ -100,7 +133,7 @@ class ProductsController < ApplicationController
 
     def remove_categories
         if !params[:category_ids] || params[:category_ids].class != Array
-            return render json: {msg: "Requires 'category_ids' in request body"}.to_json, status: 400
+            return render json: {msg: "Requires 'category_ids' array in request body"}.to_json, status: 400
         end
 
         for i in params[:category_ids] do

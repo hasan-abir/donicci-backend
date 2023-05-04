@@ -10,4 +10,5 @@ Rails.application.routes.draw do
       put 'categories/remove', to: "products#remove_categories"
     end
   end
-end
+  resources :categories
+end  

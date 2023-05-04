@@ -23,6 +23,16 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal(2, product.categories.length)
   end
 
+  test "does save with description" do
+    product = product_instance
+    description = "Lorem"
+
+    product.description = description
+    
+    assert product.save
+    assert_equal(description, product.description)
+  end
+
   test "does save not with categories more than 5" do
     product = product_instance
 

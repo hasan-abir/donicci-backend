@@ -10,6 +10,7 @@ class Product
   has_many :cart_items
   has_many :reviews
   has_many :ratings
+  index({ title: "text", description: "text" })
 
   validates :title, presence: { message: "must be provided" }
   validates :images, length: {minimum: 1, maximum: 3, message: "length should be between 1 and 3"}

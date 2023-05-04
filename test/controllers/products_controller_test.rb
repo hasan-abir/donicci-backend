@@ -23,6 +23,85 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "product: 6", response.last["title"]
   end
 
+  test "index: paginated results with both category_id and search text" do
+    x = 1
+    term = "lorem"
+    category = category_instance
+    category.save
+
+    while(x <= 10)
+      product = product_instance("product: " + x.to_s)
+
+      if x.odd?
+        product.title = "product: " + term
+        product.category_ids.push(category._id)
+      end
+
+      product.save
+
+      x = x + 1
+    end
+
+    get "/products?category_id=" + category._id + "&search_term=" + term
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 5, response.length
+    assert_equal "product: " + term, response.first["title"]
+    assert_equal "product: " + term, response.last["title"]
+  end
+
+  test "index: paginated results with search text" do
+    x = 1
+    term = "lorem"
+
+    while(x <= 10)
+      title = "product: " + x.to_s
+
+      if x.odd?
+        title = "product: " + term
+      end
+
+      product_instance(title).save
+
+      x = x + 1
+    end
+
+    get "/products?search_term=" + term
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 5, response.length
+    assert_equal "product: " + term, response.first["title"]
+    assert_equal "product: " + term, response.last["title"]
+  end
+
+  test "index: paginated results from category id" do
+    category = category_instance
+    category.save
+
+    x = 1
+    while(x <= 10)
+      product = product_instance("product: " + x.to_s)
+      
+      if x.odd?
+        product.category_ids.push(category._id)
+      end
+
+      product.save
+
+      x = x + 1
+    end
+
+    get "/products?category_id=" + category._id
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 5, response.length
+    assert_equal "product: 9", response.first["title"]
+    assert_equal "product: 1", response.last["title"]
+  end
+
   test "index: paginated results next page" do
     x = 1
     nextPage = ""
@@ -49,6 +128,109 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "product: 1", response.last["title"]
   end
 
+  test "index: paginated results next page with both category_id and search text" do
+    x = 1
+    nextPage = ""
+    term = "lorem"
+    category = category_instance
+    category.save
+
+    while(x <= 10)
+      product = product_instance("product: " + x.to_s)
+
+      if x.odd?
+        product.title = "product: " + term
+        product.category_ids.push(category._id)
+      end
+
+      product.save
+      product.updated_at = Time.new(product.updated_at.to_s) + (60 * x)
+      product.save
+
+      if x == 7
+        nextPage = product.updated_at
+      end
+
+      x = x + 1
+    end
+
+    get "/products?next=" + nextPage.to_s + "&category_id=" + category._id + "&search_term=" + term
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 3, response.length
+    assert_equal "product: " + term, response.first["title"]
+    assert_equal "product: " + term, response.last["title"]
+  end
+
+  test "index: paginated results next page with search text" do
+    x = 1
+    nextPage = ""
+    term = "lorem"
+
+    while(x <= 10)
+      title = "product: " + x.to_s
+
+      if x.odd?
+        title = "product: " + term
+      end
+
+      product = product_instance(title)
+      product.save
+      product.updated_at = Time.new(product.updated_at.to_s) + (60 * x)
+      product.save
+
+      if x == 7
+        nextPage = product.updated_at
+      end
+
+      x = x + 1
+    end
+
+    get "/products?next=" + nextPage.to_s + "&search_term=" + term
+
+    
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 3, response.length
+    assert_equal "product: " + term, response[0]["title"]
+    assert_equal "product: " + term, response.last["title"]
+  end
+
+  test "index: paginated results next page from category_id" do
+    category = category_instance
+    category.save
+
+    x = 1
+    nextPage = ""
+    while(x <= 10)
+      product = product_instance("product: " + x.to_s)
+
+      if x.odd?
+        product.category_ids.push(category._id)
+      end
+
+      product.save
+      product.updated_at = Time.new(product.updated_at.to_s) + (60 * x)
+      product.save
+
+      if x == 7
+        nextPage = product.updated_at
+      end
+
+      x = x + 1
+    end
+
+    get "/products?next=" + nextPage.to_s + "&category_id=" + category._id
+
+    
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 3, response.length
+    assert_equal "product: 5", response[0]["title"]
+    assert_equal "product: 1", response.last["title"]
+  end
+
   test "index: limited paginated results" do
     limit = 8
     x = 1
@@ -59,6 +241,82 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     end
 
     get "/products?limit=" + limit.to_s
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal limit, response.length
+  end
+
+  test "index: limited paginated results with both category_id and search text" do
+    x = 1
+    limit = 3
+    term = "lorem"
+    category = category_instance
+    category.save
+
+    while(x <= 10)
+      product = product_instance("product: " + x.to_s)
+
+      if x.odd?
+        product.title = "product: " + term
+        product.category_ids.push(category._id)
+      end
+
+      product.save
+
+      x = x + 1
+    end
+
+    get "/products?limit=" + limit.to_s + "&category_id=" + category._id + "&search_term=" + term
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 3, response.length
+  end
+
+  test "index: limited paginated results with search text" do
+    limit = 3
+    x = 1
+    term = "lorem"
+
+    while(x <= 10)
+      title = "product: " + x.to_s
+
+      if x.odd?
+        title = "product: " + term
+      end
+
+      product_instance(title).save
+
+      x = x + 1
+    end
+
+    get "/products?limit=" + limit.to_s + "&search_term=" + term
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal limit, response.length
+  end
+
+  test "index: limited paginated results with category_id" do
+    category = category_instance
+    category.save
+
+    limit = 3
+    x = 1
+    while(x <= 10)
+      product = product_instance("product: " + x.to_s)
+      
+      if x.odd?
+        product.category_ids.push(category._id)
+      end
+
+      product.save
+
+      x = x + 1
+    end
+
+    get "/products?limit=" + limit.to_s + "&category_id=" + category._id
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -104,7 +362,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: saves product" do
-    post "/products/", params: {product: {title: "Product", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}}
+    post "/products/", params: {product: {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}}
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -119,25 +377,17 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
-    assert_equal "Requires 'product' in request body", response["msg"]
+    assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity images", response["msg"]
   end
 
-  test "create: doesn't save product with empty title" do
-    post "/products/", params: {product: {title: nil, images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}}
+  test "create: doesn't save product with empty and/or invalid fields" do
+    post "/products/", params: {product: {title: nil, images: nil, price: nil, quantity: nil,}}
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Title must be provided"
-    assert_equal 400, @response.status
-
-    productsSaved = Product.all
-    assert_equal 0, productsSaved.length
-  end
-
-  test "create: doesn't save product with no images" do
-    post "/products/", params: {product: {title: "Product", images: [], price: 300, quantity: 1}}
-
-    response = JSON.parse(@response.body)
     assert response["msgs"].include? "Images length should be between 1 and 3"
+    assert response["msgs"].include? "Price is not a number"
+    assert response["msgs"].include? "Quantity is not a number"
     assert_equal 400, @response.status
 
     productsSaved = Product.all
@@ -145,7 +395,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save product with more than 3 images" do
-    post "/products/", params: {product: {title: "Product", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}, {fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}}
+    post "/products/", params: {product: {images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}, {fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}]}}
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Images length should be between 1 and 3"
@@ -156,7 +406,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save when price is not integer" do
-    post "/products/", params: {product: {title: "Product", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300.00, quantity: 1}}
+    post "/products/", params: {product: {price: 300.00}}
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Price must be an integer"
@@ -167,7 +417,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save when price is less than 300" do
-    post "/products/", params: {product: {title: "Product", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 299, quantity: 1}}
+    post "/products/", params: {product: {price: 299}}
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Price must be greater than or equal to 300"
@@ -178,7 +428,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save when quantity is not integer" do
-    post "/products/", params: {product: {title: "Product", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1.00}}
+    post "/products/", params: {product: {quantity: 1.00}}
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Quantity must be an integer"
@@ -189,7 +439,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save when quantity is less than 1" do
-    post "/products/", params: {product: {title: "Product", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 0}}
+    post "/products/", params: {product: {quantity: 0}}
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Quantity must be greater than or equal to 1"
@@ -235,67 +485,19 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal updatedProduct[:product][:quantity], response["quantity"]
   end
 
-  test "update: updates product without title" do
+  test "update: updates product with empty and/or invalid fields" do
     product = product_instance
     product.save
 
-    updatedProduct = {product: {images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2}}
+    updatedProduct = {product: {images: nil, title: nil, description: nil, price: nil, quantity: nil}}
 
     put "/products/" + product._id, params: updatedProduct 
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal product.title, response["title"]
-    assert_equal updatedProduct[:product][:images].length, response["images"].length
-    assert_equal updatedProduct[:product][:price], response["price"]
-    assert_equal updatedProduct[:product][:quantity], response["quantity"]
-  end
-
-  test "update: updates product without images" do
-    product = product_instance
-    product.save
-
-    updatedProduct = {product: {title: "Updated product", price: 350, quantity: 2}}
-
-    put "/products/" + product._id, params: updatedProduct 
-
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal updatedProduct[:product][:title], response["title"]
     assert_equal product.images.length, response["images"].length
-    assert_equal updatedProduct[:product][:price], response["price"]
-    assert_equal updatedProduct[:product][:quantity], response["quantity"]
-  end
-
-  test "update: updates product without price" do
-    product = product_instance
-    product.save
-
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], quantity: 2}}
-
-    put "/products/" + product._id, params: updatedProduct 
-
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal updatedProduct[:product][:title], response["title"]
-    assert_equal updatedProduct[:product][:images].length, response["images"].length
     assert_equal product.price, response["price"]
-    assert_equal updatedProduct[:product][:quantity], response["quantity"]
-  end
-
-  test "update: updates product without quantity" do
-    product = product_instance
-    product.save
-
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], price: 350}}
-
-    put "/products/" + product._id, params: updatedProduct 
-
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal updatedProduct[:product][:title], response["title"]
-    assert_equal updatedProduct[:product][:images].length, response["images"].length
-    assert_equal updatedProduct[:product][:price], response["price"]
     assert_equal product.quantity, response["quantity"]
   end
 
@@ -309,14 +511,14 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
-    assert_equal "Requires 'product' in request body", response["msg"]
+    assert_equal "Requires 'product' in request body with fields: title(optional) description(optional) price(optional) quantity(optional) images(optional)", response["msg"]
   end
 
   test "update: doesn't update product with more than 3 images" do
     product = product_instance
     product.save
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}, {fileId: "6", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2}}
+    updatedProduct = {product: {images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}, {fileId: "6", url: "https://hasanabir.netlify.app/"}]}}
 
     put "/products/" + product._id, params: updatedProduct
 
@@ -329,7 +531,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     product = product_instance
     product.save
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}], price: 350.00, quantity: 2}}
+    updatedProduct = {product: {price: 350.00}}
 
     put "/products/" + product._id, params: updatedProduct
 
@@ -342,7 +544,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     product = product_instance
     product.save
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}], price: -350, quantity: 2}}
+    updatedProduct = {product: {price: -350}}
 
     put "/products/" + product._id, params: updatedProduct
 
@@ -355,7 +557,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     product = product_instance
     product.save
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2.00}}
+    updatedProduct = {product: {quantity: 2.00}}
 
     put "/products/" + product._id, params: updatedProduct
 
@@ -368,7 +570,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     product = product_instance
     product.save
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: -2}}
+    updatedProduct = {product: {quantity: -2}}
 
     put "/products/" + product._id, params: updatedProduct
 
@@ -408,7 +610,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
-    assert_equal "Requires 'category_ids' in request body", response["msg"]
+    assert_equal "Requires 'category_ids' array in request body", response["msg"]
   end
 
   test "remove_categories: adds categories to product" do
@@ -444,7 +646,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
-    assert_equal "Requires 'category_ids' in request body", response["msg"]
+    assert_equal "Requires 'category_ids' array in request body", response["msg"]
   end
 
   def product_instance(product_title = "test product") 
