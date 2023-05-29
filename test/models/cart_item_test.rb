@@ -5,13 +5,14 @@ class CartItemTest < ActiveSupport::TestCase
     CartItem.delete_all
     Product.delete_all
     User.delete_all
+    Role.delete_all
   end  
 
-  test "should save" do
+  test "cart_item: should save" do
     assert cart_item_instance.save
   end
 
-  test "should not save when selected_quantity isn't provided" do
+  test "cart_item: should not save when selected_quantity isn't provided" do
     cart_item = cart_item_instance
     cart_item.selected_quantity = nil
 
@@ -19,7 +20,7 @@ class CartItemTest < ActiveSupport::TestCase
     assert cart_item.errors.full_messages.include? "Selected quantity must be provided"
   end
 
-  test "should not save when selected_quantity isn't number" do
+  test "cart_item: should not save when selected_quantity isn't number" do
     cart_item = cart_item_instance
     cart_item.selected_quantity = 1.5
 
@@ -27,7 +28,7 @@ class CartItemTest < ActiveSupport::TestCase
     assert cart_item.errors.full_messages.include? "Selected quantity must be an integer"
   end
 
-  test "should not save when selected_quantity is less than 1" do
+  test "cart_item: should not save when selected_quantity is less than 1" do
     cart_item = cart_item_instance
     cart_item.selected_quantity = 0
 
@@ -56,13 +57,22 @@ class CartItemTest < ActiveSupport::TestCase
 
     return product
   end
-  def user_instance(username = "Test", email = "test@test.com")
+  def user_instance(username = "test", email = "test@test.com", password = "testtest")
+    role = role_instance
+    role.save
+
     user = User.new
     user.username = username
     user.email = email
-    user.password_hash = "bcrypthash"
-    user.password_salt = "bcryptsalt"
+    user.password = password
+    user.roles.push(role)
 
     return user
-  end
+  end  
+  def role_instance(name = "ROLE_USER")
+    role = Role.new
+    role.name = name
+
+    return role
+  end  
 end

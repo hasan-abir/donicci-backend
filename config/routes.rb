@@ -4,6 +4,13 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "articles#index"
 
+  # User authentication routes
+  scope path: '/auth' do
+    post '/register', to: 'users#create'
+    post '/login', to: 'sessions#create'
+    delete '/logout', to: 'sessions#destroy'
+  end
+
   resources :products, only: [:index, :show, :create, :destroy, :update] do
     member do
       put 'categories', to: "products#add_categories"

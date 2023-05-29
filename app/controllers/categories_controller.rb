@@ -1,5 +1,12 @@
+require "jwt_authentication"
+
 class CategoriesController < ApplicationController
-    before_action :set_category, only: [:show, :destroy, :update]
+    include JwtAuthentication
+
+    before_action :authenticate_user, only: [:create, :destroy, :update] do
+        check_for_roles(["ROLE_ADMIN", "ROLE_MODERATOR"])
+    end
+    prepend_before_action :set_category, only: [:show, :destroy, :update]
 
     def index 
         limit = params[:limit] ? params[:limit] : 5

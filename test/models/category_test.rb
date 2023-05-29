@@ -6,11 +6,11 @@ class CategoryTest < ActiveSupport::TestCase
     Category.delete_all
   end  
 
-  test "does save" do
+  test "category: does save" do
     assert category_instance.save
   end
 
-  test "does not save when name is nil" do
+  test "category: does not save when name is nil" do
     category = category_instance
     category.name = nil
 

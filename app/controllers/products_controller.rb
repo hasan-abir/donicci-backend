@@ -1,5 +1,12 @@
+require "jwt_authentication"
+
 class ProductsController < ApplicationController
-    before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
+    include JwtAuthentication
+
+    before_action :authenticate_user, only: [:create, :destroy, :update, :add_categories, :remove_categories] do
+        check_for_roles(["ROLE_ADMIN", "ROLE_MODERATOR"])
+    end
+    prepend_before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
 
     def index
         limit = params[:limit] ? params[:limit] : 5
@@ -25,6 +32,10 @@ class ProductsController < ApplicationController
     end
 
     def create
+        # unless check_for_roles(["ROLE_ADMIN"])
+        #     return render json: {msg: "Permission not granted"}.to_json, status: 403
+        # end
+
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
         for i in Product.attribute_names do
@@ -150,6 +161,12 @@ class ProductsController < ApplicationController
 
         render json: @product
     end
+
+    # def check_for_roles (roles)
+    #     userRoles = request.env[:current_user].roles.map {|role| role.name}
+
+    #     (roles - userRoles).empty?
+    # end
 
     def set_product
         product_instance = Product.find(params[:id])

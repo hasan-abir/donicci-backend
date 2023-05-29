@@ -6,11 +6,11 @@ class ProductTest < ActiveSupport::TestCase
     Category.delete_all
   end  
 
-  test "does save" do
+  test "product: does save" do
     assert product_instance.save
   end
 
-  test "does save with categories" do
+  test "product: does save with categories" do
     category1 = category_instance("category 1")
     assert category1.save
     category2 = category_instance("category 2")
@@ -23,7 +23,7 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal(2, product.categories.length)
   end
 
-  test "does save with description" do
+  test "product: does save with description" do
     product = product_instance
     description = "Lorem"
 
@@ -33,7 +33,7 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal(description, product.description)
   end
 
-  test "does save not with categories more than 5" do
+  test "product: does save not with categories more than 5" do
     product = product_instance
 
     x = 1
@@ -50,7 +50,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Categories length should be 5 and less"
   end
 
-  test "does not save when title is nil" do
+  test "product: does not save when title is nil" do
     product = product_instance
     product.title = nil
 
@@ -58,7 +58,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Title must be provided"
   end
 
-  test "does not save when there are no images" do
+  test "product: does not save when there are no images" do
     product = product_instance
     product.images = []
 
@@ -66,7 +66,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Images length should be between 1 and 3"
   end
 
-  test "does not save when there are more than 3 images" do
+  test "product: does not save when there are more than 3 images" do
     product = product_instance
     product.images.push({fileId: "3", url: "https://hasanabir.netlify.app/"})
     product.images.push({fileId: "4", url: "https://hasanabir.netlify.app/"})
@@ -75,7 +75,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Images length should be between 1 and 3"
   end
 
-  test "does not save when price is not integer" do
+  test "product: does not save when price is not integer" do
     product = product_instance
     product.price = 300.00
 
@@ -83,7 +83,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Price must be an integer"
   end
 
-  test "does not save when price is less than 300" do
+  test "product: does not save when price is less than 300" do
     product = product_instance
     product.price = 299
 
@@ -91,7 +91,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Price must be greater than or equal to 300"
   end
 
-  test "does not save when quantity is not integer" do
+  test "product: does not save when quantity is not integer" do
     product = product_instance
     product.quantity = 1.00
 
@@ -99,7 +99,7 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Quantity must be an integer"
   end
 
-  test "does not save when quantity is less than 1" do
+  test "product: does not save when quantity is less than 1" do
     product = product_instance
     product.quantity = 0
 

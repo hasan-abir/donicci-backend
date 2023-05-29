@@ -6,90 +6,63 @@ class UserTest < ActiveSupport::TestCase
     Role.delete_all
   end
 
-  test "should save" do
-    assert user_instance.save
-  end
-
-  test "should save with roles" do
-    adminRole = role_instance("ROLE_ADMIN")
-    userRole = role_instance
-    assert adminRole.save
-    assert userRole.save
-
+  test "user: should save" do
     user = user_instance
-    user.roles.push(adminRole)
-    user.roles.push(userRole)
 
-    assert_equal(2, user.roles.length)
     assert user.save
+    assert_equal user.username.to_s.titleize, user.username
+  end  
 
-    assert adminRole.save
-    assert userRole.save
-  end
+  test "user: shouldn't save with empty fields" do
+    user = user_instance(nil, nil, nil)
 
-  test "should not save when username isn't provided" do
-    user = user_instance
-    user.username = nil
-    assert_not user.save
-    assert user.errors.full_messages.include? "Username must be provided"
-  end
-
-  test "should not save when username already exists" do
-    user = user_instance
-    assert user.save
-
-    userCopy = user_instance
-    assert_not userCopy.save
-    assert userCopy.errors.full_messages.include? "Username 'Test' already exists"
-    assert userCopy.errors.full_messages.include? "Email 'test@test.com' already exists"
-  end
-
-  test "should not save when email isn't provided" do
-    user = user_instance
-    user.email = nil
     assert_not user.save
     assert user.errors.full_messages.include? "Email must be provided"
-  end
+    assert user.errors.full_messages.include? "Username must be provided"
+    assert user.errors.full_messages.include? "Password must be provided"
+  end  
 
-  test "should not save when email isn't valid" do
+  test "user: shouldn't save with invalid email" do
     user = user_instance
     user.email = "testtest.com"
+
     assert_not user.save
-    assert user.errors.full_messages.include? "Email is invalid"
-  end
+    assert user.errors.full_messages.include? "Email address is invalid"
+  end  
 
-  test "should not save when email already exists" do
+  test "user: shouldn't save with invalid password" do
     user = user_instance
-    assert user.save
+    user.password = "testtes"
 
-    userCopy = user_instance("Test 2")
-    assert_not userCopy.save
-    assert userCopy.errors.full_messages.include? "Email 'test@test.com' already exists"
-  end
-
-  test "should not save when password_hash isn't provided" do
-    user = user_instance
-    user.password_hash = nil
     assert_not user.save
-    assert user.errors.full_messages.include? "Password hash can't be blank"
-  end
+    assert user.errors.full_messages.include? "Password length should be 8 characters minimum"
+  end  
 
-  test "should not save when password_salt isn't provided" do
-    user = user_instance
-    user.password_salt = nil
-    assert_not user.save
-    assert user.errors.full_messages.include? "Password salt can't be blank"
-  end
+  test "user: shouldn't save with existing username and/or email" do
+    firstUser = user_instance
+    assert firstUser.save
 
-  def user_instance(username = "Test", email = "test@test.com")
+    secondUser = user_instance
+
+    assert_not secondUser.save
+
+    assert secondUser.errors.full_messages.include? "Email must be unique"
+    assert secondUser.errors.full_messages.include? "Username must be unique"
+  end 
+
+  def user_instance(username = "test", email = "test@test.com", password = "testtest")
+    role = role_instance
+    role.save
+
     user = User.new
     user.username = username
     user.email = email
-    user.password_hash = "bcrypthash"
-    user.password_salt = "bcryptsalt"
+    user.password = password
+    user.roles.push(role)
 
     return user
   end  
+
   def role_instance(name = "ROLE_USER")
     role = Role.new
     role.name = name
