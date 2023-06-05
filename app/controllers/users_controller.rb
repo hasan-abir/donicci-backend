@@ -8,7 +8,7 @@ class UsersController < ApplicationController
         end
     end
 
-    if !params[:user]
+    unless params[:user]
         return render json: {msg: emptyReqBodyMsg}.to_json, status: 400
     end
 

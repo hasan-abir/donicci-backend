@@ -46,7 +46,7 @@ class CartItemTest < ActiveSupport::TestCase
     user.save
     cartItem.user = user
 
-    return cartItem
+    cartItem
   end
   def product_instance(product_title = "test product") 
     product = Product.new
@@ -55,7 +55,7 @@ class CartItemTest < ActiveSupport::TestCase
     product.price = 300
     product.quantity = 1
 
-    return product
+    product
   end
   def user_instance(username = "test", email = "test@test.com", password = "testtest")
     role = role_instance
@@ -67,12 +67,12 @@ class CartItemTest < ActiveSupport::TestCase
     user.password = password
     user.roles.push(role)
 
-    return user
+    user
   end  
   def role_instance(name = "ROLE_USER")
     role = Role.new
     role.name = name
 
-    return role
+    role
   end  
 end

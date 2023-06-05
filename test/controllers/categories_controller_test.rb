@@ -316,7 +316,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     category = Category.new
     category.name = category_name
 
-    return category
+    category
   end
   def user_instance(username = "Hasan Abir", email = "test@test.com") 
     user = User.new
@@ -324,12 +324,12 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     user.email = email
     user.password = "testtest"
 
-    return user
+    user
   end
   def role_instance(name = "ROLE_ADMIN") 
     role = Role.new
     role.name = name
 
-    return role
+    role
   end
 end

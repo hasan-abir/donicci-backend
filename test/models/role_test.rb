@@ -36,6 +36,6 @@ class RoleTest < ActiveSupport::TestCase
     role = Role.new
     role.name = name
 
-    return role
+    role
   end  
 end

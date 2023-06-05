@@ -19,7 +19,7 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.save
     assert user.errors.full_messages.include? "Email must be provided"
     assert user.errors.full_messages.include? "Username must be provided"
-    assert user.errors.full_messages.include? "Password must be provided"
+    assert user.errors.full_messages.include? "Password can't be blank"
   end  
 
   test "user: shouldn't save with invalid email" do
@@ -50,6 +50,14 @@ class UserTest < ActiveSupport::TestCase
     assert secondUser.errors.full_messages.include? "Username must be unique"
   end 
 
+  test "user: shouldn't save with no roles" do
+    user = user_instance
+    user.role_ids = []
+    assert_not user.save
+
+    assert user.errors.full_messages.include? "Role ids length should be 1 minimum"
+  end 
+
   def user_instance(username = "test", email = "test@test.com", password = "testtest")
     role = role_instance
     role.save
@@ -60,13 +68,13 @@ class UserTest < ActiveSupport::TestCase
     user.password = password
     user.roles.push(role)
 
-    return user
+    user
   end  
 
   def role_instance(name = "ROLE_USER")
     role = Role.new
     role.name = name
 
-    return role
+    role
   end  
 end

@@ -16,7 +16,7 @@ module JwtAuthentication
               end
 
               request.env[:current_user] = user
-          rescue JWT::DecodeError, JWT::VerificationError
+          rescue JWT::DecodeError, JWT::VerificationError, JWT::ExpiredSignature
               # Invalid token
               return unauthenticated_response
           end

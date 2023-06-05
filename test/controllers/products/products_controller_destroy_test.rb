@@ -99,13 +99,13 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
     product.price = 300
     product.quantity = 1
 
-    return product
+    product
   end
   def category_instance(category_name = "test category") 
     category = Category.new
     category.name = category_name
 
-    return category
+    category
   end
   def user_instance(username = "Hasan Abir", email = "test@test.com") 
     user = User.new
@@ -113,12 +113,12 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
     user.email = email
     user.password = "testtest"
 
-    return user
+    user
   end
   def role_instance(name = "ROLE_ADMIN") 
     role = Role.new
     role.name = name
 
-    return role
+    role
   end
 end

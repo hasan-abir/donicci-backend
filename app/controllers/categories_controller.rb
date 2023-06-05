@@ -21,7 +21,7 @@ class CategoriesController < ApplicationController
     end
 
     def create
-        if !params[:category]
+        unless params[:category]
             return render json: {msg: "Requires 'category' in request body"}.to_json, status: 400
         end
 
@@ -44,7 +44,7 @@ class CategoriesController < ApplicationController
     end
 
     def update 
-        if !params[:category]
+        unless params[:category]
             return render json: {msg: "Requires 'category' in request body"}.to_json, status: 400
         end
         

@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   scope path: '/auth' do
     post '/register', to: 'users#create'
     post '/login', to: 'sessions#create'
+    post '/refresh-token', to: 'sessions#refresh'
     delete '/logout', to: 'sessions#destroy'
   end
 

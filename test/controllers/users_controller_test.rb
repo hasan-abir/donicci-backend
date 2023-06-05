@@ -35,7 +35,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 400, @response.status
-    assert_equal ["Username must be provided", "Roles length should be 1 minimum"], response["msgs"]
+    assert_equal ["Username must be provided", "Role ids length should be 1 minimum"], response["msgs"]
 
     usersSaved = User.all
     assert_equal 0, usersSaved.length

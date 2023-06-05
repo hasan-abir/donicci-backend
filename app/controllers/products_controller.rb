@@ -39,7 +39,7 @@ class ProductsController < ApplicationController
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
         for i in Product.attribute_names do
-            if !['_id', 'created_at', 'updated_at', 'category_ids'].include? i
+            unless ['_id', 'created_at', 'updated_at', 'category_ids'].include? i
                 if i == "description"
                     emptyReqBodyMsg.concat(" " + i + "(optional)")       
                 else
@@ -48,7 +48,7 @@ class ProductsController < ApplicationController
             end
         end
 
-        if !params[:product]
+        unless params[:product]
             return render json: {msg: emptyReqBodyMsg}.to_json, status: 400
         end
 
@@ -91,12 +91,12 @@ class ProductsController < ApplicationController
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
         for i in Product.attribute_names do
-            if !['_id', 'created_at', 'updated_at', 'category_ids'].include? i
+            unless ['_id', 'created_at', 'updated_at', 'category_ids'].include? i
                 emptyReqBodyMsg.concat(" " + i + "(optional)")       
             end
         end
         
-        if !params[:product]
+        unless params[:product]
             return render json: {msg: emptyReqBodyMsg}.to_json, status: 400
         end
         
