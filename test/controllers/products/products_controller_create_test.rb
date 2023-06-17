@@ -33,7 +33,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
   end  
 
   test "create: saves product" do
-    product = {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}
+    product = {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1, user_rating: 0}
 
     post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
     
@@ -41,13 +41,19 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal product[:title], response["title"]
+    assert response["price"]
+    assert response["quantity"]
+    assert response["user_rating"]
+    assert response["description"]
+    assert response["images"]
+    assert response["category_list"]
 
     productsSaved = Product.all
     assert_equal 1, productsSaved.length
   end
 
   test "create: saves product as a moderator" do
-    product = {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}
+    product = {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1, user_rating: 0}
 
     post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @mod_token }
     
@@ -61,7 +67,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save product without authentication" do
-    post "/products/", params: {product: {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}}
+    post "/products/", params: {product: {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1, user_rating: 0}}
     
 
     response = JSON.parse(@response.body)
@@ -73,7 +79,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save product without permission" do
-    post "/products/", params: {product: {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @user_token }
+    post "/products/", params: {product: {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1, user_rating: 0}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @user_token }
     
 
     response = JSON.parse(@response.body)
@@ -89,11 +95,11 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
-    assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity images", response["msg"]
+    assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity user_rating images", response["msg"]
   end
 
   test "create: doesn't save product with empty and/or invalid fields" do
-    post "/products/", params: {product: {title: nil, images: nil, price: nil, quantity: nil,}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    post "/products/", params: {product: {title: nil, images: nil, price: nil, quantity: nil, user_rating: nil}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
@@ -161,12 +167,35 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
     assert_equal 0, productsSaved.length
   end
 
+  test "create: doesn't save when user_rating is less than 0" do
+    post "/products/", params: {product: {user_rating: -1}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert response["msgs"].include? "User rating must be greater than or equal to 0"
+
+    productsSaved = Product.all
+    assert_equal 0, productsSaved.length
+  end
+
+  test "create: doesn't save when user_rating is greater than 5" do
+    post "/products/", params: {product: {user_rating: 5.5}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert response["msgs"].include? "User rating must be less than or equal to 5"
+
+    productsSaved = Product.all
+    assert_equal 0, productsSaved.length
+  end
+
   def product_instance(product_title = "test product") 
     product = Product.new
     product.title = product_title
     product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
     product.price = 300
     product.quantity = 1
+    product.user_rating = 0
 
     product
   end

@@ -46,6 +46,7 @@ class ProductsControllerUpdateTest < ActionDispatch::IntegrationTest
     assert_equal updatedProduct[:product][:images].length, response["images"].length
     assert_equal updatedProduct[:product][:price], response["price"]
     assert_equal updatedProduct[:product][:quantity], response["quantity"]
+    assert response["category_list"]
   end
 
   test "update: updates product as moderator" do
@@ -112,7 +113,7 @@ class ProductsControllerUpdateTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
-    assert_equal "Requires 'product' in request body with fields: title(optional) description(optional) price(optional) quantity(optional) images(optional)", response["msg"]
+    assert_equal "Requires 'product' in request body with fields: title(optional) description(optional) price(optional) quantity(optional) user_rating(optional) images(optional)", response["msg"]
   end
 
   test "update: doesn't update product with more than 3 images" do
@@ -179,6 +180,32 @@ class ProductsControllerUpdateTest < ActionDispatch::IntegrationTest
     assert_equal 400, @response.status
     assert response["msgs"].include? "Quantity must be greater than or equal to 1"
   end
+
+  test "update: doesn't update when user_rating is less than 0" do
+    product = product_instance
+    product.save
+
+    updatedProduct = {product: {user_rating: -1}}
+
+    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert response["msgs"].include? "User rating must be greater than or equal to 0"
+  end
+
+  test "update: doesn't update when user_rating is greater than 5" do
+    product = product_instance
+    product.save
+
+    updatedProduct = {product: {user_rating: 5.5}}
+
+    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+    assert response["msgs"].include? "User rating must be less than or equal to 5"
+  end
  
 
   def product_instance(product_title = "test product") 
@@ -187,6 +214,7 @@ class ProductsControllerUpdateTest < ActionDispatch::IntegrationTest
     product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
     product.price = 300
     product.quantity = 1
+    product.user_rating = 0
 
     product
   end

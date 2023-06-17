@@ -5,6 +5,7 @@ class Product
   field :description, type: String, default: ""
   field :price, type: Integer
   field :quantity, type: Integer
+  field :user_rating, type: Integer
   field :images, type: Array, default: []
   has_and_belongs_to_many :categories, inverse_of: nil
   has_many :cart_items
@@ -16,5 +17,6 @@ class Product
   validates :images, length: {minimum: 1, maximum: 3, message: "length should be between 1 and 3"}
   validates :price, numericality: {only_integer: true, greater_than_or_equal_to: 300}
   validates :quantity, numericality: {only_integer: true, greater_than_or_equal_to: 1}
+  validates :user_rating, numericality: {greater_than_or_equal_to: 0, less_than_or_equal_to: 5}
   validates :categories, length: {maximum: 5, message: "length should be 5 and less"}
 end

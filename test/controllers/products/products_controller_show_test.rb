@@ -15,6 +15,12 @@ class ProductsControllerShowTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal product[:title], response["title"]
+    assert response["price"]
+    assert response["quantity"]
+    assert response["user_rating"]
+    assert response["description"]
+    assert response["images"]
+    assert response["category_list"]
   end
 
   test "show: finds one with categories" do
@@ -50,6 +56,7 @@ class ProductsControllerShowTest < ActionDispatch::IntegrationTest
     product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
     product.price = 300
     product.quantity = 1
+    product.user_rating = 0
 
     product
   end

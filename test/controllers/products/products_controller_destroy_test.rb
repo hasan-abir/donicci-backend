@@ -98,6 +98,7 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
     product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
     product.price = 300
     product.quantity = 1
+    product.user_rating = 0
 
     product
   end

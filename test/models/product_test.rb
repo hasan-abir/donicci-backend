@@ -107,12 +107,29 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Quantity must be greater than or equal to 1"
   end
 
+  test "product: does not save when user_rating is less than 0" do
+    product = product_instance
+    product.user_rating = -0.5
+
+    assert_not product.save
+    assert product.errors.full_messages.include? "User rating must be greater than or equal to 0"
+  end
+
+  test "product: does not save when user_rating is more than 5" do
+    product = product_instance
+    product.user_rating = 5.5
+
+    assert_not product.save
+    assert product.errors.full_messages.include? "User rating must be less than or equal to 5"
+  end
+
   def product_instance(product_title = "test product") 
     product = Product.new
     product.title = product_title
     product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
     product.price = 300
     product.quantity = 1
+    product.user_rating = 0
 
     product
   end

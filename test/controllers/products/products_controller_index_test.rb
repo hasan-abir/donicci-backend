@@ -21,6 +21,10 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
     assert_equal 5, response.length
     assert_equal "product: 10", response.first["title"]
     assert_equal "product: 6", response.last["title"]
+    assert response.first["_id"]
+    assert response.first["images"]
+    assert response.first["price"]
+    assert response.first["user_rating"]
   end
 
   test "index: paginated results with both category_id and search text" do
@@ -329,6 +333,7 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
     product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
     product.price = 300
     product.quantity = 1
+    product.user_rating = 0
 
     product
   end

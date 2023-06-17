@@ -13,29 +13,23 @@ class ProductsController < ApplicationController
         nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
 
         if params[:category_id] && params[:search_term]
-            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).order_by(updated_at: "desc")
+            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
         elsif params[:search_term] && !params[:category_id]
-            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage).limit(limit).order_by(updated_at: "desc")
+            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
         elsif params[:category_id] && !params[:search_term]
-            products = Product.where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).order_by(updated_at: "desc")
+            products = Product.where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
         else
-            products = Product.where(:updated_at.lt => nextPage).limit(limit).order_by(updated_at: "desc")
+            products = Product.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
         end
 
         render json: products
     end
 
     def show
-        @product[:category_list] = @product.categories.only(:_id, :name)
-
-        render json: @product
+        render json: get_product_details_json(@product)
     end
 
     def create
-        # unless check_for_roles(["ROLE_ADMIN"])
-        #     return render json: {msg: "Permission not granted"}.to_json, status: 403
-        # end
-
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
         for i in Product.attribute_names do
@@ -70,14 +64,13 @@ class ProductsController < ApplicationController
         product.images = images
         product.price = params[:product][:price]
         product.quantity = params[:product][:quantity]
+        product.user_rating = params[:product][:user_rating]
         product.save
         
         if product.errors.full_messages.length > 0
             render json: {msgs: product.errors.full_messages}.to_json, status: 400
         else
-            product[:category_list] = product.categories.only(:_id, :name)
-
-            render json: product
+            render json: get_product_details_json(product)
         end
     end
 
@@ -111,14 +104,13 @@ class ProductsController < ApplicationController
 
         @product.price = params[:product][:price].presence || @product.price
         @product.quantity = params[:product][:quantity].presence || @product.quantity
+        @product.user_rating = params[:product][:user_rating].presence || @product.user_rating
         @product.save
         
         if @product.errors.full_messages.length > 0
             render json: {msgs: @product.errors.full_messages}.to_json, status: 400
         else
-            @product[:category_list] = @product.categories.only(:_id, :name)
-
-            render json: @product
+            render json: get_product_details_json(@product)
         end
     end
 
@@ -137,9 +129,7 @@ class ProductsController < ApplicationController
 
         @product.save
 
-        @product[:category_list] = @product.categories.only(:_id, :name)
-
-        render json: @product
+        render json: get_product_details_json(@product)
     end
 
     def remove_categories
@@ -157,20 +147,18 @@ class ProductsController < ApplicationController
 
         @product.save
 
-        @product[:category_list] = @product.categories.only(:_id, :name)
-
-        render json: @product
+        render json: get_product_details_json(@product)
     end
 
-    # def check_for_roles (roles)
-    #     userRoles = request.env[:current_user].roles.map {|role| role.name}
+    def get_product_details_json(product)
+        product[:category_list] = product.categories.only(:_id, :name)
 
-    #     (roles - userRoles).empty?
-    # end
+        product.to_json(only: [:_id, :title, :price, :quantity, :description, :user_rating, :images, :category_list])
+    end
 
     def set_product
         product_instance = Product.find(params[:id])
-
+    
         if product_instance == nil
             render json: {msg: "Product not found"}.to_json, status: 404
         end
