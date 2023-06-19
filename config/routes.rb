@@ -19,4 +19,9 @@ Rails.application.routes.draw do
     end
   end
   resources :categories
+  resources :cart_items, path: "/cart", only: [:index, :create, :destroy] do
+    collection do
+      delete "/all", to: "cart_items#destroy_all"
+    end
+  end
 end  
