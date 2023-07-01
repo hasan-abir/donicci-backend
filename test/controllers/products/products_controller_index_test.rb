@@ -1,9 +1,12 @@
 require "test_helper"
 
 class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
+  setup do
+    DatabaseCleaner[:mongoid].start
+  end
+    
   teardown do
-    Product.delete_all
-    Category.delete_all
+    DatabaseCleaner[:mongoid].clean
   end  
 
   test "index: paginated results" do
@@ -325,22 +328,5 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal limit, response.length
-  end
-
-  def product_instance(product_title = "test product") 
-    product = Product.new
-    product.title = product_title
-    product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
-    product.price = 300
-    product.quantity = 1
-    product.user_rating = 0
-
-    product
-  end
-  def category_instance(category_name = "test category") 
-    category = Category.new
-    category.name = category_name
-
-    category
   end
 end

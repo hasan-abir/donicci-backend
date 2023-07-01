@@ -20,4 +20,5 @@ class User
   validates :role_ids, length: {minimum: 1, message: "length should be 1 minimum"}
 
   validates_uniqueness_of :username, :email, message: "must be unique"
+  index({ username: 1, email: 1 }, { unique: true })
 end

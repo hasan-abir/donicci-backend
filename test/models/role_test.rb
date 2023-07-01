@@ -30,6 +30,7 @@ class RoleTest < ActiveSupport::TestCase
     roleCopy =  role_instance
     assert_not roleCopy.save
     assert roleCopy.errors.full_messages.include? "Name 'ROLE_USER' already exists" 
+    assert_equal 1, Role.all.length
   end
 
   def role_instance(name = "ROLE_USER")

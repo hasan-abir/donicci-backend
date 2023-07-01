@@ -1,10 +1,13 @@
 require "test_helper"
 
 class ProductTest < ActiveSupport::TestCase
+  setup do
+    DatabaseCleaner[:mongoid].start
+  end
+    
   teardown do
-    Product.delete_all
-    Category.delete_all
-  end  
+    DatabaseCleaner[:mongoid].clean
+  end
 
   test "product: does save" do
     assert product_instance.save
@@ -121,22 +124,5 @@ class ProductTest < ActiveSupport::TestCase
 
     assert_not product.save
     assert product.errors.full_messages.include? "User rating must be less than or equal to 5"
-  end
-
-  def product_instance(product_title = "test product") 
-    product = Product.new
-    product.title = product_title
-    product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
-    product.price = 300
-    product.quantity = 1
-    product.user_rating = 0
-
-    product
-  end
-  def category_instance(category_name = "test category") 
-    category = Category.new
-    category.name = category_name
-
-    category
   end
 end

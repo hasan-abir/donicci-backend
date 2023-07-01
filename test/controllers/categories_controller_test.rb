@@ -2,34 +2,25 @@ require "test_helper"
 
 class CategoriesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    DatabaseCleaner[:mongoid].start
+
+    user = user_instance
+    
     role_admin = role_instance("ROLE_ADMIN")
     role_admin.save
-    role_user = role_instance("ROLE_USER")
-    role_user.save
     role_mod = role_instance("ROLE_MODERATOR")
     role_mod.save
+    role_user = role_instance("ROLE_USER")
+    role_user.save
 
-    admin = user_instance
-    admin.roles.push(role_admin)
-    user = user_instance("User Hasan Abir", "usertest@test.com")
-    user.roles.push(role_user)
-    mod = user_instance("Mod Hasan Abir", "modtest@test.com")
-    mod.roles.push(role_mod)
+    user.role_ids.push(role_admin._id)
 
     user.save
-    admin.save
-    mod.save
-
-    @admin_token = JWT.encode({ user_id: admin._id }, Rails.application.secret_key_base)
-    @user_token = JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
-    @mod_token = JWT.encode({ user_id: mod._id }, Rails.application.secret_key_base)
   end
 
   teardown do
-    Category.delete_all
-    User.delete_all
-    Role.delete_all
-  end  
+    DatabaseCleaner[:mongoid].clean
+  end
 
   test "index: paginated results" do
     x = 1
@@ -111,7 +102,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: saves category" do
-    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    token = generate_token("admin")
+
+    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -122,7 +115,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: saves category as a moderator" do
-    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @mod_token }
+    token = generate_token("mod")
+
+    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -144,7 +139,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save category without permission" do
-    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @user_token }
+    token = generate_token
+
+    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 403, @response.status
@@ -155,7 +152,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: returns error without category" do
-    post "/categories/", params: {}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    token = generate_token("admin")
+
+    post "/categories/", params: {}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
@@ -163,7 +162,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: doesn't save category with empty name" do
-    post "/categories/", params: {category: {name: nil}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    token = generate_token("admin")
+
+    post "/categories/", params: {category: {name: nil}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert response["msgs"].include? "Name must be provided"
@@ -177,7 +178,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     category = category_instance
     category.save
 
-    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    token = generate_token("admin")
+
+    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     assert_equal 201, @response.status
 
@@ -189,7 +192,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     category = category_instance
     category.save
 
-    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @mod_token }
+    token = generate_token("mod")
+
+    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     assert_equal 201, @response.status
 
@@ -215,7 +220,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     category = category_instance
     category.save
 
-    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @user_token }
+    token = generate_token
+
+    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 403, @response.status
@@ -239,7 +246,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     updatedCategory = {category: {name: "Updated category"}}
 
-    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    token = generate_token("admin")
+
+    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -252,7 +261,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     updatedCategory = {category: {name: "Updated category"}}
 
-    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @mod_token }
+    token = generate_token("mod")
+
+    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -278,7 +289,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     updatedCategory = {category: {name: "Updated category"}}
 
-    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @user_token }
+    token = generate_token
+
+    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
     response = JSON.parse(@response.body)
     assert_equal 403, @response.status
@@ -291,7 +304,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     updatedCategory = {category: {name: nil}}
 
-    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token } 
+    token = generate_token("admin")
+
+    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token } 
     
     response = JSON.parse(@response.body)
 
@@ -305,31 +320,12 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     updatedCategory = {}
 
-    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token } 
+    token = generate_token("admin")
+    
+    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token } 
 
     response = JSON.parse(@response.body)
     assert_equal 400, @response.status
     assert_equal "Requires 'category' in request body", response["msg"]
-  end
-
-  def category_instance(category_name = "test category") 
-    category = Category.new
-    category.name = category_name
-
-    category
-  end
-  def user_instance(username = "Hasan Abir", email = "test@test.com") 
-    user = User.new
-    user.username = username
-    user.email = email
-    user.password = "testtest"
-
-    user
-  end
-  def role_instance(name = "ROLE_ADMIN") 
-    role = Role.new
-    role.name = name
-
-    role
   end
 end

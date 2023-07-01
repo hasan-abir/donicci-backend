@@ -1,241 +1,231 @@
 require "test_helper"
 
 class ProductsControllerUpdateTest < ActionDispatch::IntegrationTest
-  setup do
-    role_admin = role_instance("ROLE_ADMIN")
-    role_admin.save
-    role_user = role_instance("ROLE_USER")
-    role_user.save
-    role_mod = role_instance("ROLE_MODERATOR")
-    role_mod.save
+    setup do
+        DatabaseCleaner[:mongoid].start
 
-    admin = user_instance
-    admin.roles.push(role_admin)
-    user = user_instance("User Hasan Abir", "usertest@test.com")
-    user.roles.push(role_user)
-    mod = user_instance("Mod Hasan Abir", "modtest@test.com")
-    mod.roles.push(role_mod)
+        user = user_instance
+        
+        role_admin = role_instance("ROLE_ADMIN")
+        role_admin.save
+        role_mod = role_instance("ROLE_MODERATOR")
+        role_mod.save
+        role_user = role_instance("ROLE_USER")
+        role_user.save
 
-    user.save
-    admin.save
-    mod.save
+        user.role_ids.push(role_admin._id)
 
-    @admin_token = JWT.encode({ user_id: admin._id }, Rails.application.secret_key_base)
-    @user_token = JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
-    @mod_token = JWT.encode({ user_id: mod._id }, Rails.application.secret_key_base)
-  end
+        user.save
+    end
 
-  teardown do
-    Product.delete_all
-    Category.delete_all
-    User.delete_all
-    Role.delete_all
-  end  
+    teardown do
+        DatabaseCleaner[:mongoid].clean
+    end
 
-  test "update: updates product" do
-    product = product_instance
-    product.save
+    test "update: updates product" do
+        product = product_instance
+        product.save
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2}}
+        updatedProduct = {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2}
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+        token = generate_token("admin")
 
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal updatedProduct[:product][:title], response["title"]
-    assert_equal updatedProduct[:product][:images].length, response["images"].length
-    assert_equal updatedProduct[:product][:price], response["price"]
-    assert_equal updatedProduct[:product][:quantity], response["quantity"]
-    assert response["category_list"]
-  end
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
-  test "update: updates product as moderator" do
-    product = product_instance
-    product.save
+        response = JSON.parse(@response.body)
+        assert_equal 200, @response.status
 
-    updatedProduct = {product: {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2}}
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @mod_token }
 
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal updatedProduct[:product][:title], response["title"]
-    assert_equal updatedProduct[:product][:images].length, response["images"].length
-    assert_equal updatedProduct[:product][:price], response["price"]
-    assert_equal updatedProduct[:product][:quantity], response["quantity"]
-  end
+        assert_equal updatedProduct[:title], response["title"]
+        assert_equal updatedProduct[:images].length, response["images"].length
+        assert_equal updatedProduct[:price], response["price"]
+        assert_equal updatedProduct[:quantity], response["quantity"]
+        assert response["category_list"]
+    end
 
-  test "update: doesn't update product without authentication" do
-    product = product_instance
-    product.save
+    test "update: updates product as moderator" do
+        product = product_instance
+        product.save
 
-    put "/products/" + product._id
+        updatedProduct = {title: "Updated product", images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}], price: 350, quantity: 2}
 
-    response = JSON.parse(@response.body)
-    assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
-  end
+        token = generate_token("mod")
 
-  test "update: doesn't update product without permission" do
-    product = product_instance
-    product.save
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
-    put "/products/" + product._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @user_token }
+        response = JSON.parse(@response.body)
+        assert_equal 200, @response.status
 
-    response = JSON.parse(@response.body)
-    assert_equal 403, @response.status
-    assert_equal "Unauthorized", response["msg"]
-  end
 
-  test "update: updates product with empty and/or invalid fields" do
-    product = product_instance
-    product.save
 
-    updatedProduct = {product: {images: nil, title: nil, description: nil, price: nil, quantity: nil}}
+        assert_equal updatedProduct[:title], response["title"]
+        assert_equal updatedProduct[:images].length, response["images"].length
+        assert_equal updatedProduct[:price], response["price"]
+        assert_equal updatedProduct[:quantity], response["quantity"]
+        assert response["category_list"]
+    end
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token } 
+    test "update: doesn't update product unauthenticated" do
+        product = product_instance
+        product.save
 
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal product.title, response["title"]
-    assert_equal product.images.length, response["images"].length
-    assert_equal product.price, response["price"]
-    assert_equal product.quantity, response["quantity"]
-  end
+        put "/products/" + product._id
 
-  test "update: returns error without product in request body" do
-    product = product_instance
-    product.save
+        response = JSON.parse(@response.body)
 
-    updatedProduct = {}
+        assert_equal 401, @response.status
+        assert_equal "Unauthenticated", response["msg"]
+    end
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    test "update: doesn't update product as user" do
+        product = product_instance
+        product.save
 
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert_equal "Requires 'product' in request body with fields: title(optional) description(optional) price(optional) quantity(optional) user_rating(optional) images(optional)", response["msg"]
-  end
+        token = generate_token("user")
 
-  test "update: doesn't update product with more than 3 images" do
-    product = product_instance
-    product.save
+        put "/products/" + product._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
-    updatedProduct = {product: {images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}, {fileId: "6", url: "https://hasanabir.netlify.app/"}]}}
+        response = JSON.parse(@response.body)
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+        assert_equal 403, @response.status
+        assert_equal "Unauthorized", response["msg"]
+    end
 
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "Images length should be between 1 and 3"
-  end
+    test "update: doesn't update product without product" do
+        product = product_instance
+        product.save
 
-  test "update: doesn't update when price is not integer" do
-    product = product_instance
-    product.save
+        token = generate_token("admin")
 
-    updatedProduct = {product: {price: 350.00}}
+        put "/products/" + product._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+        response = JSON.parse(@response.body)
 
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "Price must be an integer"
-  end
+        assert_equal 400, @response.status
+        assert_equal "Requires 'product' in request body with fields: title(optional) description(optional) price(optional) quantity(optional) user_rating(optional) images(optional)", response["msg"]
+    end
 
-  test "update: doesn't update when price is less than 300" do
-    product = product_instance
-    product.save
+    test "update: updates product with empty and/or invalid fields" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {images: nil, title: nil, description: nil, price: nil, quantity: nil}
 
-    updatedProduct = {product: {price: -350}}
+        token = generate_token("admin")
+    
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token } 
+    
+        response = JSON.parse(@response.body)
+        assert_equal 200, @response.status
+        assert_equal product.title, response["title"]
+        assert_equal product.images.length, response["images"].length
+        assert_equal product.price, response["price"]
+        assert_equal product.quantity, response["quantity"]
+    end
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+    test "update: doesn't update product with more than 3 images" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {images: [{fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}, {fileId: "5", url: "https://hasanabir.netlify.app/"}, {fileId: "6", url: "https://hasanabir.netlify.app/"}]}
+    
+        token = generate_token("admin")
 
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "Price must be greater than or equal to 300"
-  end
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "Images length should be between 1 and 3"
+    end
+    
+    test "update: doesn't update when price is not integer" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {price: 350.00}
 
-  test "update: doesn't update when quantity is not integer" do
-    product = product_instance
-    product.save
+        token = generate_token("admin")
+    
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "Price must be an integer"
+    end
+    
+    test "update: doesn't update when price is less than 300" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {price: -350}
+    
+        token = generate_token("admin")
 
-    updatedProduct = {product: {quantity: 2.00}}
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "Price must be greater than or equal to 300"
+    end
+    
+    test "update: doesn't update when quantity is not integer" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {quantity: 2.00}
+    
+        token = generate_token("admin")
 
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "Quantity must be an integer"
+    end
+    
+    test "update: doesn't update when quantity is less than 1" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {quantity: -2}
+    
+        token = generate_token("admin")
 
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "Quantity must be an integer"
-  end
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "Quantity must be greater than or equal to 1"
+    end
+    
+    test "update: doesn't update when user_rating is less than 0" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {user_rating: -1}
+    
+        token = generate_token("admin")
 
-  test "update: doesn't update when quantity is less than 1" do
-    product = product_instance
-    product.save
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "User rating must be greater than or equal to 0"
+    end
+    
+    test "update: doesn't update when user_rating is greater than 5" do
+        product = product_instance
+        product.save
+    
+        updatedProduct = {user_rating: 5.5}
+    
+        token = generate_token("admin")
 
-    updatedProduct = {product: {quantity: -2}}
-
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "Quantity must be greater than or equal to 1"
-  end
-
-  test "update: doesn't update when user_rating is less than 0" do
-    product = product_instance
-    product.save
-
-    updatedProduct = {product: {user_rating: -1}}
-
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "User rating must be greater than or equal to 0"
-  end
-
-  test "update: doesn't update when user_rating is greater than 5" do
-    product = product_instance
-    product.save
-
-    updatedProduct = {product: {user_rating: 5.5}}
-
-    put "/products/" + product._id, params: updatedProduct, headers: { "HTTP_AUTHORIZATION" => "Bearer " + @admin_token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "User rating must be less than or equal to 5"
-  end
- 
-
-  def product_instance(product_title = "test product") 
-    product = Product.new
-    product.title = product_title
-    product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
-    product.price = 300
-    product.quantity = 1
-    product.user_rating = 0
-
-    product
-  end
-  def category_instance(category_name = "test category") 
-    category = Category.new
-    category.name = category_name
-
-    category
-  end
-  def user_instance(username = "Hasan Abir", email = "test@test.com") 
-    user = User.new
-    user.username = username
-    user.email = email
-    user.password = "testtest"
-
-    user
-  end
-  def role_instance(name = "ROLE_ADMIN") 
-    role = Role.new
-    role.name = name
-
-    role
-  end
+        put "/products/" + product._id, params: {product: updatedProduct}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+    
+        response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
+        assert response["msgs"].include? "User rating must be less than or equal to 5"
+    end
 end

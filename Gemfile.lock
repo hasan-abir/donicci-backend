@@ -73,6 +73,10 @@ GEM
     builder (3.2.4)
     concurrent-ruby (1.2.0)
     crass (1.0.6)
+    database_cleaner-core (2.0.1)
+    database_cleaner-mongoid (2.0.1)
+      database_cleaner-core (~> 2.0.0)
+      mongoid
     date (3.3.3)
     debug (1.7.1)
     erubi (1.12.0)
@@ -146,7 +150,6 @@ GEM
       zeitwerk (~> 2.5)
     rake (13.0.6)
     ruby2_keywords (0.0.5)
-    sqlite3 (1.6.1-x86_64-linux)
     thor (1.2.1)
     timeout (0.3.2)
     tzinfo (2.0.6)
@@ -162,12 +165,12 @@ PLATFORMS
 DEPENDENCIES
   bcrypt (~> 3.1.7)
   bootsnap
+  database_cleaner-mongoid
   debug
   jwt
   mongoid
   puma (~> 5.0)
   rails (~> 7.0.4)
-  sqlite3 (~> 1.4)
   tzinfo-data
 
 RUBY VERSION

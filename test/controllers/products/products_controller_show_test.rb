@@ -1,9 +1,12 @@
 require "test_helper"
 
 class ProductsControllerShowTest < ActionDispatch::IntegrationTest
+  setup do
+    DatabaseCleaner[:mongoid].start
+  end
+
   teardown do
-    Product.delete_all
-    Category.delete_all
+    DatabaseCleaner[:mongoid].clean
   end  
 
   test "show: finds one" do
@@ -29,8 +32,8 @@ class ProductsControllerShowTest < ActionDispatch::IntegrationTest
     category2 = category_instance("category 2")
     assert category2.save
     product = product_instance
-    product.categories.push(category1)
-    product.categories.push(category2)
+    product.category_ids.push(category1._id)
+    product.category_ids.push(category2._id)
     product.save
     
     get "/products/" + product._id
@@ -48,22 +51,5 @@ class ProductsControllerShowTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
     assert_equal response["msg"], "Product not found"
     assert_equal 404, @response.status
-  end
-  
-  def product_instance(product_title = "test product") 
-    product = Product.new
-    product.title = product_title
-    product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
-    product.price = 300
-    product.quantity = 1
-    product.user_rating = 0
-
-    product
-  end
-  def category_instance(category_name = "test category") 
-    category = Category.new
-    category.name = category_name
-
-    category
   end
 end

@@ -1,14 +1,18 @@
 require "test_helper"
 
 class SessionsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    DatabaseCleaner[:mongoid].start
+  end
+
   teardown do
-    RefreshToken.delete_all
-    User.delete_all
-    Role.delete_all
+    DatabaseCleaner[:mongoid].clean
   end
 
   test "create: returns token" do
     user = user_instance
+    role = role_instance
+    user.role_ids.push(role._id)
     user.save
 
     credentials = {email: "test@test.com", password: "testtest"}
@@ -162,35 +166,4 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     tokensSaved = RefreshToken.all
     assert_equal 0, tokensSaved.length
   end
-
-  def refresh_token_instance() 
-    user = user_instance
-    refresh_token = RefreshToken.new
-    refresh_token.token = JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
-
-    user.save
-    refresh_token.user = user
-
-    refresh_token
-  end
-
-  def user_instance(username = "test", email = "test@test.com", password = "testtest")
-    role = role_instance
-    role.save
-
-    user = User.new
-    user.username = username
-    user.email = email
-    user.password = password
-    user.roles.push(role)
-
-    user
-  end  
-
-  def role_instance(name = "ROLE_USER")
-    role = Role.new
-    role.name = name
-
-    role
-  end  
 end

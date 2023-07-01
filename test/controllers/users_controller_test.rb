@@ -1,10 +1,13 @@
 require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    DatabaseCleaner[:mongoid].start
+  end
+
   teardown do
-    User.delete_all
-    Role.delete_all
-  end  
+    DatabaseCleaner[:mongoid].clean
+  end
 
   test "create: saves user" do
     role = Role.new

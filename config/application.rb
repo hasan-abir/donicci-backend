@@ -1,6 +1,12 @@
 require_relative "boot"
 
-require "rails/all"
+require "rails"
+require "action_controller/railtie" rescue LoadError
+require "action_view/railtie" rescue LoadError
+require "action_mailer/railtie" rescue LoadError
+require "active_job/railtie" rescue LoadError
+require "action_cable/engine" rescue LoadError
+require "rails/test_unit/railtie" rescue LoadError
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
