@@ -79,6 +79,10 @@ GEM
       mongoid
     date (3.3.3)
     debug (1.7.1)
+    dotenv (2.8.1)
+    dotenv-rails (2.8.1)
+      dotenv (= 2.8.1)
+      railties (>= 3.2)
     erubi (1.12.0)
     globalid (1.1.0)
       activesupport (>= 5.0)
@@ -167,14 +171,15 @@ DEPENDENCIES
   bootsnap
   database_cleaner-mongoid
   debug
+  dotenv-rails
   jwt
   mongoid
   puma (~> 5.0)
-  rails (~> 7.0.4)
+  rails
   tzinfo-data
 
 RUBY VERSION
-   ruby 3.2.1p31
+   ruby 3.2.2p53
 
 BUNDLED WITH
    2.4.6
