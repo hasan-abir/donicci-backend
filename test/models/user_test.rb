@@ -15,19 +15,29 @@ class UserTest < ActiveSupport::TestCase
     user.role_ids.push(role._id)
     
     assert user.save
-    assert_equal user.username.to_s.titleize, user.username
   end  
 
   test "user: shouldn't save with empty fields" do
-    user = user_instance(nil, nil, nil)
+    user = user_instance(nil, nil, nil, nil)
     role = role_instance
     user.role_ids.push(role._id)
 
     assert_not user.save
     assert user.errors.full_messages.include? "Email must be provided"
     assert user.errors.full_messages.include? "Username must be provided"
+    assert user.errors.full_messages.include? "Display name must be provided"
     assert user.errors.full_messages.include? "Password can't be blank"
   end  
+
+  test "user: shouldn't save with invalid username" do
+    user = user_instance
+    user.username = "hasan"
+    assert_not user.save
+    user.username = "hasan_abir"
+    assert_not user.save
+
+    assert user.errors.full_messages.include? "Username must contain lowercase letters, numbers, and underscores"
+  end 
 
   test "user: shouldn't save with invalid email" do
     user = user_instance

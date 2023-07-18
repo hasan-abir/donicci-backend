@@ -5,6 +5,12 @@ Rails.application.routes.draw do
   # root "articles#index"
 
   # User authentication routes
+  resources :roles, only: [:create, :destroy] do
+    member do
+      put "user/:username", to: "roles#assign_role"
+    end
+  end
+
   scope path: '/auth' do
     post '/register', to: 'users#create'
     post '/login', to: 'sessions#create'

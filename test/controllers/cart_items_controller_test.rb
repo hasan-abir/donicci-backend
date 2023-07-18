@@ -25,7 +25,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   test "index: gets the result" do
     x = 1
     
-    author = User.where(username: "Hasan Abir").first
+    author = User.where(username: "hasan_abir1999").first
     role_user = Role.where(name: "ROLE_USER").first
     other_user = user_instance
     other_user.roles.push(role_user)
@@ -199,8 +199,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     token = generate_token
 
-
-    author = User.where(username: "Hasan Abir").first
+    author = User.where(username: "hasan_abir1999").first
 
     cartItem = cart_item_instance(1)
     cartItem.product_id = product._id
@@ -219,7 +218,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     product = product_instance
     product.save
 
-    author = User.where(username: "Hasan Abir").first
+    author = User.where(username: "hasan_abir1999").first
 
     cartItem = cart_item_instance(1)
     cartItem.product_id = product._id
@@ -254,7 +253,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     product.save
 
     role_user = Role.where(name: "ROLE_USER").first
-    other_user = user_instance("Other user", "otheruser@test.com")
+    other_user = user_instance("other_user456", "otheruser@test.com")
     other_user.roles.push(role_user)
     other_user.save
 
@@ -278,9 +277,9 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   test "destroy_all: deletes cart all items" do
     x = 1
     
-    author = User.where(username: "Hasan Abir").first
+    author = User.where(username: "hasan_abir1999").first
     role_user = Role.where(name: "ROLE_USER").first
-    other_user = user_instance("Other user", "otheruser@test.com")
+    other_user = user_instance("other_user456", "otheruser@test.com")
     other_user.roles.push(role_user)
     other_user.save
 
@@ -315,9 +314,9 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   test "destroy_all: doesn't deletes cart items without authentication" do
     x = 1
     
-    author = User.where(username: "Hasan Abir").first
+    author = User.where(username: "hasan_abir1999").first
     role_user = Role.where(name: "ROLE_USER").first
-    other_user = user_instance("Other user", "otheruser@test.com")
+    other_user = user_instance("other_user456", "otheruser@test.com")
     other_user.roles.push(role_user)
     other_user.save
     

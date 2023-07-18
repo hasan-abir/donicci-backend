@@ -10,11 +10,10 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create: saves user" do
-    role = Role.new
-    role.name = "ROLE_ADMIN"
+    role = role_instance
     role.save
 
-    user = {username: "Test", email: "test@test.com", password: "testtest", roles: [role.name]}
+    user = {display_name: "Test User", username: "test_user123", email: "test@test.com", password: "testtest"}
     post "/auth/register/", params: {user: user}
 
     response = JSON.parse(@response.body)
@@ -28,29 +27,51 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_not response["password_digest"]
 
     usersSaved = User.all
+    rolesSaved = Role.all
     assert_equal 1, usersSaved.length
+    assert_equal 1, rolesSaved.length
+  end
+
+  test "create: saves user without needing to create new role" do
+    user = {display_name: "Test User", username: "test_user123", email: "test@test.com", password: "testtest"}
+    post "/auth/register/", params: {user: user}
+
+    response = JSON.parse(@response.body)
+
+    assert_equal 200, @response.status
+    assert_equal user[:username], response["username"]
+    assert_equal user[:email], response["email"]
+    assert_not response["_id"]
+    assert_not response["updated_at"]
+    assert_not response["created_at"]
+    assert_not response["password_digest"]
+
+    usersSaved = User.all
+    rolesSaved = Role.all
+    assert_equal 1, usersSaved.length
+    assert_equal 1, rolesSaved.length
   end
 
   
-  test "create: doesn't saves user with invalid fields" do
+  test "create: doesn't save user with invalid fields" do
     post "/auth/register/", params: {user: {username: nil, email: "test@test.com", password: "testtest"}}
 
     response = JSON.parse(@response.body)
 
     assert_equal 400, @response.status
-    assert_equal ["Username must be provided", "Role ids length should be 1 minimum"], response["msgs"]
+    assert_equal ["Username must be provided", "Display name must be provided", "Username must contain lowercase letters, numbers, and underscores"], response["msgs"]
 
     usersSaved = User.all
     assert_equal 0, usersSaved.length
   end
 
-  test "create: doesn't saves no user in request body" do
+  test "create: doesn't save no user in request body" do
     post "/auth/register/", params: {}
 
     response = JSON.parse(@response.body)
 
     assert_equal 400, @response.status
-    assert_equal "Requires 'user' in request body with fields: username email roles password", response["msg"]
+    assert_equal "Requires 'user' in request body with fields: display_name username email roles password", response["msg"]
 
     usersSaved = User.all
     assert_equal 0, usersSaved.length

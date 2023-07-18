@@ -13,19 +13,14 @@ class UsersController < ApplicationController
     end
 
     user = User.new
+    user.display_name = params[:user][:display_name]
     user.username = params[:user][:username]
     user.email = params[:user][:email]
     user.password = params[:user][:password]
 
-    if params[:user][:roles] 
-      params[:user][:roles].each {|roleStr|
-        role = Role.find_by(name: roleStr)
+    role = Role.find_or_create_by(name: "ROLE_USER")
 
-        if role
-          user.roles.push(role)
-        end
-      } 
-    end
+    user.roles.push(role)
 
     user.save
     

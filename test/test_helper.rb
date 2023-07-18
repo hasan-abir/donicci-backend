@@ -26,7 +26,7 @@ class ActiveSupport::TestCase
   # Add more helper methods to be used by all tests here...
 
   def generate_token (type = "user")
-    user = User.where(username: "Hasan Abir").first
+    user = User.where(username: "hasan_abir1999").first
     user.role_ids.clear
 
     case type
@@ -70,15 +70,16 @@ end
 
     category
   end
-  def user_instance(username = "Hasan Abir", email = "test@test.com", password = "testtest") 
+  def user_instance(username = "hasan_abir1999", email = "test@test.com", password = "testtest", display_name = "Hasan Abir") 
     user = User.new
+    user.display_name = display_name
     user.username = username
     user.email = email
     user.password = password
 
     user
   end
-  def role_instance(name = "ROLE_ADMIN") 
+  def role_instance(name = "role_user") 
     role = Role.new
     role.name = name
 

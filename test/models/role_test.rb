@@ -1,8 +1,12 @@
 require "test_helper"
 
 class RoleTest < ActiveSupport::TestCase
+  setup do
+    DatabaseCleaner[:mongoid].start
+  end
+    
   teardown do
-    Role.delete_all
+    DatabaseCleaner[:mongoid].clean
   end
 
   test "role: should save" do
@@ -16,11 +20,11 @@ class RoleTest < ActiveSupport::TestCase
     assert role.errors.full_messages.include? "Name must be provided"
   end
 
-  test "role: should not save when name isn't an enumerable" do
+  test "role: should not save when name doesn't start with role_" do
     role = role_instance
-    role.name = "ROLE_STAFF"
+    role.name = "STAFF"
     assert_not role.save
-    assert role.errors.full_messages.include? "Name must include: ROLE_USER | ROLE_ADMIN | ROLE_MODERATOR"
+    assert role.errors.full_messages.include? "Name must start with 'role_'"
   end
 
   test "role: should not save when role already exists" do
@@ -28,15 +32,10 @@ class RoleTest < ActiveSupport::TestCase
     assert role.save
 
     roleCopy =  role_instance
+    roleCopy.save
     assert_not roleCopy.save
+
     assert roleCopy.errors.full_messages.include? "Name 'ROLE_USER' already exists" 
     assert_equal 1, Role.all.length
   end
-
-  def role_instance(name = "ROLE_USER")
-    role = Role.new
-    role.name = name
-
-    role
-  end  
 end
