@@ -101,14 +101,6 @@ end
   def rating_instance(score = 4) 
     rating = Rating.new
     rating.score = score
-    product = product_instance
-    product.save
-    rating.product = product
-    user = user_instance
-    role = role_instance
-    user.role_ids.push(role._id)
-    user.save
-    rating.user = user
 
     rating
   end

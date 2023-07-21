@@ -10,7 +10,18 @@ class RatingTest < ActiveSupport::TestCase
   end
 
   test "rating: should save" do
-    assert rating_instance.save
+    rating = rating_instance
+    product = product_instance
+    product.save
+    user = user_instance
+    role = role_instance
+    user.role_ids.push(role._id)
+    user.save
+
+    rating.user_id = user._id
+    rating.product_id = product._id
+
+    assert rating.save
   end
 
   test "rating: should not save when score isn't provided" do

@@ -30,4 +30,5 @@ Rails.application.routes.draw do
       delete "/all", to: "cart_items#destroy_all"
     end
   end
+  resources :ratings, only: [:create]
 end  
