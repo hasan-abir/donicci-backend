@@ -31,4 +31,9 @@ Rails.application.routes.draw do
     end
   end
   resources :ratings, only: [:create]
+  resources :reviews, only: [:create, :destroy] do
+    collection do
+      get "/product/:product_id", to: "reviews#get_product_reviews"
+    end
+  end
 end  

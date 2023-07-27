@@ -12,7 +12,6 @@ class ActiveSupport::TestCase
     updated_database += "_#{worker}" if worker > 0
 
     Mongoid::Config.clients[:default][:database] = updated_database
-    Product.create_indexes
   end
 
   parallelize_teardown do |worker|
@@ -107,14 +106,6 @@ end
   def review_instance(description = "Lorem") 
     review = Review.new
     review.description = description
-    product = product_instance
-    product.save
-    review.product = product
-    user = user_instance
-    role = role_instance
-    user.role_ids.push(role._id)
-    user.save
-    review.user = user
 
     review
   end

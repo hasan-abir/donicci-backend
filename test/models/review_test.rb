@@ -10,7 +10,16 @@ class ReviewTest < ActiveSupport::TestCase
   end
 
   test "review: should save" do
-    assert review_instance.save
+    review = review_instance
+    product = product_instance
+    product.save
+    user = user_instance
+    role = role_instance
+    user.role_ids.push(role._id)
+    user.save
+    review.user_id = user._id
+    review.product_id = product._id
+    assert review.save
   end
 
   test "review: should not save when description isn't provided" do

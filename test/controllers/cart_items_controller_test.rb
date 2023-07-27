@@ -58,9 +58,12 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 200, @response.status
     assert_equal 5, response.length
     assert response.first["_id"]
+    assert response.first["product_image"]
+    assert response.first["product_title"]
+    assert response.first["product_price"]
+    assert response.first["product_quantity"]
     assert response.first["selected_quantity"]
-    assert response.first["product_id"]
-    assert response.first["user_id"]
+    assert_not response.first["product_id"] 
   end
 
   test "index: doesn't get the result without authentication" do
@@ -83,10 +86,13 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
+
     assert response["_id"]
+    assert response["product_image"]
+    assert response["product_title"]
+    assert response["product_price"]
+    assert response["product_quantity"]
     assert response["selected_quantity"]
-    assert response["product_id"]
-    assert response["user_id"]
 
     cartItems = CartItem.all
     assert_equal 1, cartItems.length

@@ -3,6 +3,7 @@ require "test_helper"
 class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
   setup do
     DatabaseCleaner[:mongoid].start
+    Product.create_indexes
   end
     
   teardown do
@@ -111,7 +112,7 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
 
   test "index: paginated results next page" do
     x = 1
-    nextPage = ""
+    next_page = ""
     while(x <= 10)
       product = product_instance("product: " + x.to_s)
       product.save
@@ -119,25 +120,26 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
       product.save
 
       if x == 6
-        nextPage = product.updated_at
+        next_page = product.updated_at
       end
 
       x = x + 1
     end
 
-    get "/products?next=" + nextPage.to_s
+    get "/products?next=" + next_page.to_s
 
     
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal 5, response.length
-    assert_equal "product: 5", response[0]["title"]
+    puts response.first
+    assert_equal "product: 5", response.first["title"]
     assert_equal "product: 1", response.last["title"]
   end
 
   test "index: paginated results next page with both category_id and search text" do
     x = 1
-    nextPage = ""
+    next_page = ""
     term = "lorem"
     category = category_instance
     category.save
@@ -155,13 +157,13 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
       product.save
 
       if x == 7
-        nextPage = product.updated_at
+        next_page = product.updated_at
       end
 
       x = x + 1
     end
 
-    get "/products?next=" + nextPage.to_s + "&category_id=" + category._id + "&search_term=" + term
+    get "/products?next=" + next_page.to_s + "&category_id=" + category._id + "&search_term=" + term
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
@@ -172,7 +174,7 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
 
   test "index: paginated results next page with search text" do
     x = 1
-    nextPage = ""
+    next_page = ""
     term = "lorem"
 
     while(x <= 10)
@@ -188,19 +190,19 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
       product.save
 
       if x == 7
-        nextPage = product.updated_at
+        next_page = product.updated_at
       end
 
       x = x + 1
     end
 
-    get "/products?next=" + nextPage.to_s + "&search_term=" + term
+    get "/products?next=" + next_page.to_s + "&search_term=" + term
 
     
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal 3, response.length
-    assert_equal "product: " + term, response[0]["title"]
+    assert_equal "product: " + term, response.first["title"]
     assert_equal "product: " + term, response.last["title"]
   end
 
@@ -209,7 +211,7 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
     category.save
 
     x = 1
-    nextPage = ""
+    next_page = ""
     while(x <= 10)
       product = product_instance("product: " + x.to_s)
 
@@ -222,19 +224,19 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
       product.save
 
       if x == 7
-        nextPage = product.updated_at
+        next_page = product.updated_at
       end
 
       x = x + 1
     end
 
-    get "/products?next=" + nextPage.to_s + "&category_id=" + category._id
+    get "/products?next=" + next_page.to_s + "&category_id=" + category._id
 
     
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal 3, response.length
-    assert_equal "product: 5", response[0]["title"]
+    assert_equal "product: 5", response.first["title"]
     assert_equal "product: 1", response.last["title"]
   end
 
