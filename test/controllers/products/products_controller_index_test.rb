@@ -13,7 +13,7 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
   test "index: paginated results" do
     x = 1
     while(x <= 10)
-      product_instance("product: " + x.to_s).save
+      assert product_instance("product: " + x.to_s).save
 
       x = x + 1
     end
@@ -132,7 +132,6 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal 5, response.length
-    puts response.first
     assert_equal "product: 5", response.first["title"]
     assert_equal "product: 1", response.last["title"]
   end

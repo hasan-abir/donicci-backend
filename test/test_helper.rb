@@ -24,27 +24,27 @@ class ActiveSupport::TestCase
 
   # Add more helper methods to be used by all tests here...
 
-  def generate_token (type = "user")
-    user = User.where(username: "hasan_abir1999").first
-    user.role_ids.clear
+def generate_token (type = "user")
+  user = User.where(username: "hasan_abir1999").first
+  user.role_ids.clear
 
-    case type
-        when "admin"
-            role_admin = Role.where(name: "ROLE_ADMIN").first
-            user.role_ids.push(role_admin._id)
+  case type
+      when "admin"
+          role_admin = Role.where(name: "ROLE_ADMIN").first
+          user.role_ids.push(role_admin._id)
 
-        when "mod"
-            role_mod = Role.where(name: "ROLE_MODERATOR").first
-            user.role_ids.push(role_mod._id)
+      when "mod"
+          role_mod = Role.where(name: "ROLE_MODERATOR").first
+          user.role_ids.push(role_mod._id)
 
-        else
-            role_user = Role.where(name: "ROLE_USER").first
-            user.role_ids.push(role_user._id)
-    end
+      else
+          role_user = Role.where(name: "ROLE_USER").first
+          user.role_ids.push(role_user._id)
+  end
 
-    user.save
+  user.save
 
-    JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
+  JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
 end
 
   def cart_item_instance(quantity = 10) 
@@ -56,7 +56,7 @@ end
   def product_instance(product_title = "test product") 
     product = Product.new
     product.title = product_title
-    product.images = [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}]
+    product.image_files = [upload_image("pianocat.jpeg"), upload_image("jelliecat.jpg")]
     product.price = 300
     product.quantity = 1
     product.user_rating = 0
@@ -108,5 +108,15 @@ end
     review.description = description
 
     review
+  end
+  def upload_image(path, type = "image/jpeg", upload_request = false)
+    unless upload_request
+      file_path = Rails.root.join('test', 'fixtures', 'files', path)
+      file = File.open(file_path, 'rb')
+      
+      return ActionDispatch::Http::UploadedFile.new(tempfile: file, filename: File.basename(file_path), type: type)
+    end
+
+    fixture_file_upload("#{Rails.root}/test/fixtures/files/" + path, type)
   end
 end

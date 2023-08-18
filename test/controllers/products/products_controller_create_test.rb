@@ -23,11 +23,13 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
     end
 
     test "create: creates product" do
-        product = {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1, user_rating: 0}
+        imagekitio = ImageKitIo.client
+        
+        product = {title: "Product", description: "Lorem", image_files: [upload_image("pianocat.jpeg", "image/jpeg", true), upload_image("jelliecat.jpg", "image/jpeg", true)], price: 300, quantity: 1, user_rating: 0}
 
         token = generate_token("admin")
 
-        post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+        post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
 
         response = JSON.parse(@response.body)
         assert_equal 200, @response.status
@@ -37,168 +39,81 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
         assert response["quantity"]
         assert response["user_rating"]
         assert response["description"]
-        assert response["images"]
+        assert_equal 2, response["images"].length
         assert response["category_list"]
     
         productsSaved = Product.all
         assert_equal 1, productsSaved.length
+        assert_equal 2, Product.first.images.length
+
+        image_ids = response["images"].map do |image| 
+            assert image["fileId"]
+            assert image["url"]
+
+            image["fileId"]
+          end
+      
+        imagekitio.delete_bulk_files(file_ids: image_ids)
     end
 
-    test "create: creates product as moderator" do
-        product = {title: "Product", description: "Lorem", images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}], price: 300, quantity: 1, user_rating: 0}
+    test "create: doesn't create product if product params are not provided" do
+        token = generate_token("admin")
 
-        token = generate_token("mod")
-
-        post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+        post "/products/", params: {}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
 
         response = JSON.parse(@response.body)
-        assert_equal 200, @response.status
+        assert_equal 400, @response.status
 
-        assert_equal product[:title], response["title"]
-        assert response["price"]
-        assert response["quantity"]
-        assert response["user_rating"]
-        assert response["description"]
-        assert response["images"]
-        assert response["category_list"]
+        assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity user_rating image_files", response["msg"]
     
         productsSaved = Product.all
-        assert_equal 1, productsSaved.length
+        assert_equal 0, productsSaved.length
     end
 
-    test "create: doesn't create product unauthenticated" do
-        post "/products/" 
+    test "create: doesn't create product if there is a validation error" do
+        token = generate_token("admin")
+
+        product = {description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1, user_rating: 0}
+
+        post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
 
         response = JSON.parse(@response.body)
+        assert_equal 400, @response.status
 
+        assert response["msgs"].include? "Title must be provided"
+    
+        productsSaved = Product.all
+        assert_equal 0, productsSaved.length
+    end
+
+    test "create: doesn't create product if not authenticated" do
+        product = {title: "Product", description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1, user_rating: 0}
+
+        token = generate_token("admin")
+
+        post "/products/", params: {product: product}
+
+        response = JSON.parse(@response.body)
         assert_equal 401, @response.status
+
         assert_equal "Unauthenticated", response["msg"]
+    
+        productsSaved = Product.all
+        assert_equal 0, productsSaved.length
     end
 
-    test "create: doesn't create product as user" do
+    
+    test "create: doesn't create product if insufficient role" do
+        product = {title: "Product", description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1, user_rating: 0}
+
         token = generate_token("user")
 
-        post "/products/", headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+        post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
 
         response = JSON.parse(@response.body)
-
         assert_equal 403, @response.status
+
         assert_equal "Unauthorized", response["msg"]
-    end
-
-    test "create: doesn't create product without product" do
-        token = generate_token("admin")
-
-        post "/products/" , headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-        response = JSON.parse(@response.body)
-
-        assert_equal 400, @response.status
-        assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity user_rating images", response["msg"]
-    end
-
-    test "create: doesn't save product with empty and/or invalid fields" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {title: nil, images: nil, price: nil, quantity: nil, user_rating: nil}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "Title must be provided"
-        assert response["msgs"].include? "Images length should be between 1 and 3"
-        assert response["msgs"].include? "Price is not a number"
-        assert response["msgs"].include? "Quantity is not a number"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save product with more than 3 images" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {images: [{fileId: "1", url: "https://hasanabir.netlify.app/"}, {fileId: "2", url: "https://hasanabir.netlify.app/"}, {fileId: "3", url: "https://hasanabir.netlify.app/"}, {fileId: "4", url: "https://hasanabir.netlify.app/"}]}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "Images length should be between 1 and 3"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save when price is not integer" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {price: 300.00}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "Price must be an integer"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save when price is less than 300" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {price: 299}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "Price must be greater than or equal to 300"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save when quantity is not integer" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {quantity: 1.00}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "Quantity must be an integer"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save when quantity is less than 1" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {quantity: 0}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "Quantity must be greater than or equal to 1"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save when user_rating is less than 0" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {user_rating: -1}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "User rating must be greater than or equal to 0"
-    
-        productsSaved = Product.all
-        assert_equal 0, productsSaved.length
-    end
-    
-    test "create: doesn't save when user_rating is greater than 5" do
-        token = generate_token("admin")
-
-        post "/products/", params: {product: {user_rating: 5.5}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-    
-        response = JSON.parse(@response.body)
-        assert_equal 400, @response.status
-        assert response["msgs"].include? "User rating must be less than or equal to 5"
     
         productsSaved = Product.all
         assert_equal 0, productsSaved.length

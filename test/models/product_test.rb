@@ -13,116 +13,100 @@ class ProductTest < ActiveSupport::TestCase
     assert product_instance.save
   end
 
-  test "product: does save with categories" do
-    category1 = category_instance("category 1")
-    assert category1.save
-    category2 = category_instance("category 2")
-    assert category2.save
-    product = product_instance
-    product.categories.push(category1)
-    product.categories.push(category2)
+  test "product: does not save (presence validation)" do
+    product = Product.new
 
-    assert product.save
-    assert_equal(2, product.categories.length)
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "Title must be provided"
+    assert product.errors.full_messages.include? "Image files must be provided as an array"
+    assert product.errors.full_messages.include? "Price must be provided"
+    assert product.errors.full_messages.include? "Quantity must be provided"
+    assert product.errors.full_messages.include? "User rating must be provided"
+
+    assert_equal 0, Product.all.length
   end
 
-  test "product: does save with description" do
+  test "product: does not save (integer validation)" do
     product = product_instance
-    description = "Lorem"
+    product.price = "four hundred"
+    product.quantity = "ten"
+    product.user_rating = "four point five"
 
-    product.description = description
-    
-    assert product.save
-    assert_equal(description, product.description)
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "Price is not a number"
+    assert product.errors.full_messages.include? "Quantity is not a number"
+    assert product.errors.full_messages.include? "User rating is not a number"
+
+    assert_equal 0, Product.all.length
   end
 
-  test "product: does save not with categories more than 5" do
+  test "product: does not save (length validation)" do
     product = product_instance
+    product.price = 200
+    product.quantity = 0
+    product.user_rating = -1
+
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "Price must be greater than or equal to 300"
+    assert product.errors.full_messages.include? "Quantity must be greater than or equal to 1"
+    assert product.errors.full_messages.include? "User rating must be greater than or equal to 0"
+
+    product.user_rating = 6
 
     x = 1
-
     while x <= 6
-      category = category_instance("category " + x.to_s)
-      category.save
+      category = Category.new
+      category.name = "Category " + x.to_s
 
       product.categories.push(category)
+
       x = x + 1
     end
 
     assert_not product.save
-    assert product.errors.full_messages.include? "Categories length should be 5 and less"
-  end
 
-  test "product: does not save when title is nil" do
-    product = product_instance
-    product.title = nil
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Title must be provided"
-  end
-
-  test "product: does not save when there are no images" do
-    product = product_instance
-    product.images = []
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Images length should be between 1 and 3"
-  end
-
-  test "product: does not save when there are more than 3 images" do
-    product = product_instance
-    product.images.push({fileId: "3", url: "https://hasanabir.netlify.app/"})
-    product.images.push({fileId: "4", url: "https://hasanabir.netlify.app/"})
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Images length should be between 1 and 3"
-  end
-
-  test "product: does not save when price is not integer" do
-    product = product_instance
-    product.price = 300.00
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Price must be an integer"
-  end
-
-  test "product: does not save when price is less than 300" do
-    product = product_instance
-    product.price = 299
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Price must be greater than or equal to 300"
-  end
-
-  test "product: does not save when quantity is not integer" do
-    product = product_instance
-    product.quantity = 1.00
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Quantity must be an integer"
-  end
-
-  test "product: does not save when quantity is less than 1" do
-    product = product_instance
-    product.quantity = 0
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "Quantity must be greater than or equal to 1"
-  end
-
-  test "product: does not save when user_rating is less than 0" do
-    product = product_instance
-    product.user_rating = -0.5
-
-    assert_not product.save
-    assert product.errors.full_messages.include? "User rating must be greater than or equal to 0"
-  end
-
-  test "product: does not save when user_rating is more than 5" do
-    product = product_instance
-    product.user_rating = 5.5
-
-    assert_not product.save
     assert product.errors.full_messages.include? "User rating must be less than or equal to 5"
+    assert product.errors.full_messages.include? "Categories length should be 5 and less"
+
+    assert_equal 0, Product.all.length
+  end
+
+  
+  test "product: does not save (image files validation)" do
+    product = product_instance
+    product.image_files = []
+
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "Image files length should be between 1 and 3"
+
+    product.image_files = ["file 1", "file 2", "file 3", "file 4"]
+
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "Image files length should be between 1 and 3"
+
+    product.image_files = ["file 1", "file 2", "file 3"]
+
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "File must be a valid file attachment"
+
+    product.image_files = [upload_image("jelliecat.txt", "text/plain")]
+
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "File must be of image type"
+
+    product.image_files = [upload_image("windowcat.jpg")]
+
+    assert_not product.save
+
+    assert product.errors.full_messages.include? "File size must be less than or equal to 2 mb"
+
+    assert_equal 0, Product.all.length
   end
 end

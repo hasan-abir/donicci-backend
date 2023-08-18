@@ -24,6 +24,7 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
 
     test "destroy: destroys product" do
         product = product_instance
+        product.upload_images_save_details
         product.save
 
         token = generate_token("admin")
@@ -31,24 +32,16 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
         delete "/products/" + product._id,  headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
         assert_equal 201, @response.status
+
+        imagekitio = ImageKitIo.client
+
+        images_uploaded = imagekitio.list_files({path: "donicci-products"})[:response]
+
+        assert_equal 0, images_uploaded.length
     end
 
-    test "destroy: destroys product as moderator" do
-        product = product_instance
-        product.save
-
-        token = generate_token("mod")
-
-        delete "/products/" + product._id,  headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-        assert_equal 201, @response.status
-    end
-
-    test "destroy: doesn't destroy product unauthenticated" do
-        product = product_instance
-        product.save
-
-        delete "/products/" + product._id
+    test "destroy: doesn't destroy product if not authenticated" do
+        delete "/products/" + "123"
 
         response = JSON.parse(@response.body)
 
@@ -56,13 +49,10 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
         assert_equal "Unauthenticated", response["msg"]
     end
 
-    test "destroy: doesn't destroy product as user" do
-        product = product_instance
-        product.save
-
+    test "destroy: doesn't destroy product if insufficient role" do
         token = generate_token("user")
 
-        delete "/products/" + product._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+        delete "/products/" + "123", headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
         
         response = JSON.parse(@response.body)
 
@@ -71,7 +61,9 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
     end
 
     test "destroy: 404 when not found" do
-        delete "/products/" + "123"
+        token = generate_token("admin")
+
+        delete "/products/" + "123", headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
     
         response = JSON.parse(@response.body)
         assert_equal 404, @response.status

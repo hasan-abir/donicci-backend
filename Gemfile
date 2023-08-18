@@ -39,6 +39,8 @@ gem 'jwt'
 
 gem 'bcrypt', '~> 3.1.7'
 
+gem 'imagekitio'
+
 gem 'dotenv-rails', require: 'dotenv/rails-now'
 
 group :test do

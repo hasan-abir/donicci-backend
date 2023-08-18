@@ -1,25 +1,30 @@
 require "jwt_authentication"
+require "imagekit_helper"
 
 class ProductsController < ApplicationController
     include JwtAuthentication
+    include ImagekitHelper
 
     before_action :authenticate_user, only: [:create, :destroy, :update, :add_categories, :remove_categories] do
         check_for_roles(["ROLE_ADMIN", "ROLE_MODERATOR"])
     end
-    prepend_before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
+    append_before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
 
     def index
-        limit = params[:limit] ? params[:limit] : 5
-        nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
+        limit = params[:limit] || 5
+        next_page = params[:next] ? Time.new(params[:next]) : Time.now.utc
+        search_term = params[:search_term]
+        category_id = params[:category_id]
 
-        if params[:category_id] && params[:search_term]
-            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
-        elsif params[:search_term] && !params[:category_id]
-            products = Product.text_search(params[:search_term]).where(:updated_at.lt => nextPage).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
-        elsif params[:category_id] && !params[:search_term]
-            products = Product.where(:updated_at.lt => nextPage, :category_ids => params[:category_id]).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
+        where_arguments = {}
+
+        where_arguments[:updated_at.lt] = next_page
+        where_arguments[:category_ids] = category_id if category_id
+
+        if search_term
+            products = Product.text_search(search_term).where(where_arguments).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
         else
-            products = Product.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
+            products = Product.where(where_arguments).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
         end
 
         render json: products
@@ -32,8 +37,11 @@ class ProductsController < ApplicationController
     def create
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
-        for i in Product.attribute_names do
-            unless ['_id', 'created_at', 'updated_at', 'category_ids'].include? i
+        fields_required = Product.attribute_names
+        fields_required.push("image_files")
+
+        for i in fields_required do
+            unless ['_id', 'created_at', 'updated_at', 'category_ids', 'images'].include? i
                 if i == "description"
                     emptyReqBodyMsg.concat(" " + i + "(optional)")       
                 else
@@ -46,35 +54,39 @@ class ProductsController < ApplicationController
             return render json: {msg: emptyReqBodyMsg}.to_json, status: 400
         end
 
-        product = Product.new()
+        product = Product.new
         product.title = params[:product][:title]
         product.description = params[:product][:description] || ""
         
-        images = []
-
-        if params[:product][:images].class == Array
-            for i in params[:product][:images] do
-                if i.class == ActionController::Parameters
-                    image = i.permit([:fileId, :url]).to_h
-                    images.push(image)
-                end
-            end
-        end
-
-        product.images = images
+        product.image_files = params[:product][:image_files]
         product.price = params[:product][:price]
         product.quantity = params[:product][:quantity]
         product.user_rating = params[:product][:user_rating]
-        product.save
-        
-        if product.errors.full_messages.length > 0
-            render json: {msgs: product.errors.full_messages}.to_json, status: 400
-        else
+
+        if product.valid?
+            upload_errors = product.upload_images_save_details
+
+            if upload_errors.length > 0
+                return render json: {msgs: upload_errors}.to_json, status: 400
+            end
+
+            product.save
+
             render json: get_product_details_json(product)
+        else
+            render json: {msgs: product.errors.full_messages}.to_json, status: 400
         end
     end
 
     def destroy
+        imagekitio = ImageKitIo.client
+
+        image_ids = @product.images.map do |image|
+            image["fileId"]
+        end
+
+        imagekitio.delete_bulk_files(file_ids: image_ids)
+
         @product.destroy
 
         render status: 201
@@ -83,8 +95,11 @@ class ProductsController < ApplicationController
     def update  
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
-        for i in Product.attribute_names do
-            unless ['_id', 'created_at', 'updated_at', 'category_ids'].include? i
+        fields_required = Product.attribute_names
+        fields_required.push("image_files")
+
+        for i in fields_required do
+            unless ['_id', 'created_at', 'updated_at', 'category_ids', 'images'].include? i
                 emptyReqBodyMsg.concat(" " + i + "(optional)")       
             end
         end
@@ -96,21 +111,25 @@ class ProductsController < ApplicationController
         @product.title = params[:product][:title].presence || @product.title
         @product.description = params[:product][:description].presence || @product.description
         
-        newImages = params[:product][:images].presence
-        if newImages != nil
-            newImages.map! {|i| i.permit([:fileId, :url]).to_h}
-            @product.images = newImages
-        end
+        @product.image_files = params[:product][:image_files]
 
         @product.price = params[:product][:price].presence || @product.price
         @product.quantity = params[:product][:quantity].presence || @product.quantity
         @product.user_rating = params[:product][:user_rating].presence || @product.user_rating
         @product.save
-        
-        if @product.errors.full_messages.length > 0
-            render json: {msgs: @product.errors.full_messages}.to_json, status: 400
-        else
+
+        if @product.valid?
+            upload_errors = @product.upload_images_save_details
+
+            if upload_errors.length > 0
+                return render json: {msgs: upload_errors}.to_json, status: 400
+            end
+
+            @product.save
+
             render json: get_product_details_json(@product)
+        else
+            render json: {msgs: @product.errors.full_messages}.to_json, status: 400
         end
     end
 

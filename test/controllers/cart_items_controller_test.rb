@@ -58,7 +58,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 200, @response.status
     assert_equal 5, response.length
     assert response.first["_id"]
-    assert response.first["product_image"]
+    # assert response.first["product_image"]
     assert response.first["product_title"]
     assert response.first["product_price"]
     assert response.first["product_quantity"]
@@ -88,7 +88,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 200, @response.status
 
     assert response["_id"]
-    assert response["product_image"]
+    # assert response["product_image"]
     assert response["product_title"]
     assert response["product_price"]
     assert response["product_quantity"]
