@@ -32,7 +32,6 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     other_user.save
 
     token = generate_token
-    
 
     while(x <= 6)
       product = product_instance
@@ -58,7 +57,6 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 200, @response.status
     assert_equal 5, response.length
     assert response.first["_id"]
-    # assert response.first["product_image"]
     assert response.first["product_title"]
     assert response.first["product_price"]
     assert response.first["product_quantity"]
@@ -88,7 +86,6 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 200, @response.status
 
     assert response["_id"]
-    # assert response["product_image"]
     assert response["product_title"]
     assert response["product_price"]
     assert response["product_quantity"]
@@ -96,6 +93,29 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     cartItems = CartItem.all
     assert_equal 1, cartItems.length
+  end
+
+  test "create: doesn't create cart item if a user adds a product twice" do
+    product = product_instance
+    product.save
+
+    item = {selected_quantity: 1, product_id: product._id}
+
+    token = generate_token
+
+    post "/cart/", params: {item: item}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+
+    assert_equal 200, @response.status
+
+    cartItems = CartItem.all
+    assert_equal 1, cartItems.length
+
+    post "/cart/", params: {item: item}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+
+    response = JSON.parse(@response.body)
+    assert_equal 400, @response.status
+
+    assert response["msgs"].include? "Product is already in the cart for this user"
   end
 
   test "create: doesn't create cart item without item params" do
