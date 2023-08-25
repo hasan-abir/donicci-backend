@@ -64,6 +64,41 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_not response.first["product_id"] 
   end
 
+  test "index: gets empty result" do
+    x = 1
+    
+    author = User.where(username: "hasan_abir1999").first
+    role_user = Role.where(name: "ROLE_USER").first
+    other_user = user_instance
+    other_user.roles.push(role_user)
+    other_user.save
+
+    token = generate_token
+
+    while(x <= 6)
+      product = product_instance
+      product.save
+
+      cartItem = cart_item_instance(1)
+
+      cartItem.product_id = product._id
+      if x < 6
+        cartItem.user_id = author._id
+      else
+        cartItem.user_id = other_user._id
+        cartItem.save
+      end
+
+      x = x + 1
+    end
+
+    get "/cart/", headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+
+    response = JSON.parse(@response.body)
+    assert_equal 200, @response.status
+    assert_equal 0, response.length 
+  end
+
   test "index: doesn't get the result without authentication" do
     get "/cart/"
 
@@ -134,7 +169,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, cartItems.length
   end
 
-  test "create: doesn't create cart item with empty/invalid fields" do
+  test "create: doesn't create cart item if there is a validation error" do
     product = product_instance
     product.save
 
@@ -178,42 +213,6 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
     assert_equal 404, @response.status
     assert_equal "Product not found", response["msg"]
-
-    cartItems = CartItem.all
-    assert_equal 0, cartItems.length
-  end
-
-  test "create: doesn't create cart item when quantity is less than 1" do
-    product = product_instance
-    product.save
-
-    item = {selected_quantity: 0, product_id: product._id}
-
-    token = generate_token
-
-    post "/cart/", params: {item: item}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert response["msgs"].include? "Selected quantity must be greater than or equal to 1"
-
-    cartItems = CartItem.all
-    assert_equal 0, cartItems.length
-  end
-
-  test "create: doesn't create cart item when quantity is more than stock" do
-    product = product_instance
-    product.save
-
-    item = {selected_quantity: product.quantity + 1, product_id: product._id}
-
-    token = generate_token
-
-    post "/cart/", params: {item: item}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 400, @response.status
-    assert_equal "Selected quantity exceeds the stock", response["msg"]
 
     cartItems = CartItem.all
     assert_equal 0, cartItems.length

@@ -72,7 +72,9 @@ class CartItemsController < ApplicationController
     def destroy
         user_id = request.env[:current_user]._id
 
-        unless user_id === @cart_item.user_id
+        is_author = user_id === @cart_item.user_id
+
+        unless is_author
             return render json: {msg: "Unauthorized"}.to_json, status: 403
         end
 

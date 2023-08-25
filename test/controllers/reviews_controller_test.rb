@@ -15,7 +15,7 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
 
     user.role_ids.push(role_admin._id)
 
-    user.save
+    user.save 
   end
 
   teardown do

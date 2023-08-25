@@ -47,7 +47,7 @@ class RatingsControllerTest < ActionDispatch::IntegrationTest
     token = generate_token("admin")
 
     product = product_instance
-    product.save
+    product.save 
 
     user = User.where(username: "hasan_abir1999").first
 

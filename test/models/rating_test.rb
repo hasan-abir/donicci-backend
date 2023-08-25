@@ -24,7 +24,7 @@ class RatingTest < ActiveSupport::TestCase
     assert rating.save
   end
 
-  test "rating: should not save when score isn't provided" do
+  test "rating: should not save (presence validation)" do
     rating = rating_instance
     rating.score = nil
 
@@ -32,7 +32,7 @@ class RatingTest < ActiveSupport::TestCase
     assert rating.errors.full_messages.include? "Score must be provided"
   end
 
-  test "rating: should not save when score isn't number" do
+  test "rating: should not save (integer validation)" do
     rating = rating_instance
     rating.score = 1.5
 
@@ -40,16 +40,13 @@ class RatingTest < ActiveSupport::TestCase
     assert rating.errors.full_messages.include? "Score must be an integer"
   end
 
-  test "rating: should not save when score is less than 1" do
+  test "rating: should not save (length validation)" do
     rating = rating_instance
     rating.score = 0
 
     assert_not rating.save
     assert rating.errors.full_messages.include? "Score must be greater than or equal to 1"
-  end
 
-  test "rating: should not save when score is more than 5" do
-    rating = rating_instance
     rating.score = 6
 
     assert_not rating.save

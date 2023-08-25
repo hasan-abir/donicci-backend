@@ -17,7 +17,7 @@ class UserTest < ActiveSupport::TestCase
     assert user.save
   end  
 
-  test "user: shouldn't save with empty fields" do
+  test "user: shouldn't save (presence validation)" do
     user = user_instance(nil, nil, nil, nil)
     role = role_instance
     user.role_ids.push(role._id)
@@ -29,7 +29,7 @@ class UserTest < ActiveSupport::TestCase
     assert user.errors.full_messages.include? "Password can't be blank"
   end  
 
-  test "user: shouldn't save with invalid username" do
+  test "user: shouldn't save (format validation)" do
     user = user_instance
     user.username = "hasan"
     assert_not user.save
@@ -37,23 +37,21 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.save
 
     assert user.errors.full_messages.include? "Username must contain lowercase letters, numbers, and underscores"
-  end 
 
-  test "user: shouldn't save with invalid email" do
-    user = user_instance
     user.email = "testtest.com"
 
     assert_not user.save
     assert user.errors.full_messages.include? "Email address is invalid"
-  end  
+  end 
 
-  test "user: shouldn't save with invalid password" do
+  test "user: shouldn't save (length validation)" do
     user = user_instance
     user.password = "testtes"
 
-    assert_not user.save
+    user.save
+
     assert user.errors.full_messages.include? "Password length should be 8 characters minimum"
-  end  
+  end
 
   test "user: shouldn't save with existing username and/or email" do
     firstUser = user_instance

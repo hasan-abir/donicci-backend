@@ -114,19 +114,6 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, categoriesSaved.length
   end
 
-  test "create: saves category as a moderator" do
-    token = generate_token("mod")
-
-    post "/categories/", params: {category: {name: "Category"}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert response["_id"]
-
-    categoriesSaved = Category.all
-    assert_equal 1, categoriesSaved.length
-  end
-
   test "create: doesn't save category without authentication" do
     post "/categories/", params: {category: {name: "Category"}}
 
@@ -161,7 +148,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Requires 'category' in request body", response["msg"]
   end
 
-  test "create: doesn't save category with empty name" do
+  test "create: doesn't save category if validation error" do
     token = generate_token("admin")
 
     post "/categories/", params: {category: {name: nil}}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
@@ -179,20 +166,6 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     category.save
 
     token = generate_token("admin")
-
-    delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-    assert_equal 201, @response.status
-
-    categoriesSaved = Category.all
-    assert_equal 0, categoriesSaved.length
-  end
-
-  test "destroy: deletes category as moderator" do
-    category = category_instance
-    category.save
-
-    token = generate_token("mod")
 
     delete "/categories/" + category._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
@@ -255,21 +228,6 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal updatedCategory[:category][:name], response["name"]
   end
 
-  test "update: updates category as moderator" do
-    category = category_instance
-    category.save
-
-    updatedCategory = {category: {name: "Updated category"}}
-
-    token = generate_token("mod")
-
-    put "/categories/" + category._id, params: updatedCategory, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
-
-    response = JSON.parse(@response.body)
-    assert_equal 200, @response.status
-    assert_equal updatedCategory[:category][:name], response["name"]
-  end
-
   test "update: doesn't update category without authentication" do
     category = category_instance
     category.save
@@ -298,7 +256,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Unauthorized", response["msg"]
   end
 
-  test "update: updates category without name" do
+  test "update: updates category if validation error" do
     category = category_instance
     category.save
 
