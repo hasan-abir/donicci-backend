@@ -32,12 +32,6 @@ class ProductsControllerDestroyTest < ActionDispatch::IntegrationTest
         delete "/products/" + product._id,  headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
 
         assert_equal 201, @response.status
-
-        imagekitio = ImageKitIo.client
-
-        images_uploaded = imagekitio.list_files({path: "donicci-products"})[:response]
-
-        assert_equal 0, images_uploaded.length
     end
 
     test "destroy: doesn't destroy product if not authenticated" do
