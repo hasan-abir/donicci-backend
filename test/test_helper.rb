@@ -44,7 +44,7 @@ def generate_token (type = "user")
 
   user.save
 
-  JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
+  JWT.encode({ user_id: user._id, exp: Time.now.to_i + ENV['ACCESS_EXPIRATION_SECONDS'].to_i.seconds }, Rails.application.secret_key_base)
 end
 
   def cart_item_instance(quantity = 10) 
@@ -88,7 +88,7 @@ end
     user = user_instance
     role = role_instance
     refresh_token = RefreshToken.new
-    refresh_token.token = JWT.encode({ user_id: user._id }, Rails.application.secret_key_base)
+    refresh_token.token = JWT.encode({ user_id: user._id, exp: Time.now.to_i + ENV['REFRESH_EXPIRATION_HOURS'].to_i * 3600 }, Rails.application.secret_key_base)
 
     user.role_ids.push(role._id)
     user.save

@@ -17,29 +17,36 @@ class SessionsController < ApplicationController
 
   def refresh
     unless params[:token]
-      return render json: { msg: 'No token provided' }, status: :unauthorized
+      return render json: { msg: 'No token provided' }, status: 400
     end
 
     refresh_token = RefreshToken.find_by(token: params[:token])    
 
     unless refresh_token
-      return render json: { msg: 'Token not found' }, status: :unauthorized
+      return render json: { msg: 'Token not found' }, status: 404
     end
 
-    user = User.find(refresh_token.user_id)
+    begin
 
-    unless user
-      return render json: { msg: 'User does not exist anymore' }, status: :unauthorized
+      payload = JWT.decode(params[:token], Rails.application.secret_key_base).first
+
+      user = User.find(payload['user_id'])
+
+      unless user
+        refresh_token.destroy
+
+        return render json: { msg: 'User does not exist anymore' }, status: 404
+      end
+    rescue JWT::DecodeError, JWT::VerificationError, JWT::ExpiredSignature
+        refresh_token.destroy
+
+        return render json: { msg: 'Unauthorized' }, status: 401
     end
-
-    refresh_token.destroy
 
     new_access_token = JWT.encode({ user_id: user._id, exp: token_expiration_times()[:access] }, Rails.application.secret_key_base)
 
-    new_refresh_token_instance = refresh_token_instance(user._id)
-    new_refresh_token_instance.save
+    render json: { access_token: new_access_token, refresh_token: params[:token] }
 
-    render json: { access_token: new_access_token, refresh_token: new_refresh_token_instance.token }
   end
 
   def destroy
@@ -59,17 +66,16 @@ class SessionsController < ApplicationController
   end
 
   def refresh_token_instance(user_id) 
-    refresh_token = RefreshToken.new
+    refresh_token = RefreshToken.find_or_create_by(user_id: user_id)
     refresh_token.token = JWT.encode({ user_id: user_id, exp: token_expiration_times()[:refresh] }, Rails.application.secret_key_base)
-    refresh_token.user_id = user_id
 
     refresh_token
   end
 
   def token_expiration_times
     times = {
-      access: Time.now.to_i + 120,
-      refresh: Time.now.to_i + 24 * 3600      
+      access: Time.now.to_i + ENV['ACCESS_EXPIRATION_SECONDS'].to_i,
+      refresh: Time.now.to_i + ENV['REFRESH_EXPIRATION_HOURS'].to_i * 3600      
     }
   end
 end

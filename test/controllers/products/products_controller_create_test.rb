@@ -56,6 +56,21 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
         imagekitio.delete_bulk_files(file_ids: image_ids)
     end
 
+    test "create: doesn't create product when token expires" do
+        ENV["ACCESS_EXPIRATION_SECONDS"] = "60"
+
+        token = generate_token("admin")
+
+        travel_to(Time.now + 2.minutes) do
+            product = {title: "", description: "Lorem", image_files: [upload_image("pianocat.jpeg", "image/jpeg", true), upload_image("jelliecat.jpg", "image/jpeg", true)], price: 300, quantity: 1, user_rating: 0}
+
+            post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
+
+            response = JSON.parse(@response.body)
+            assert_equal 401, @response.status
+        end
+    end
+
     test "create: doesn't create product if product params are not provided" do
         token = generate_token("admin")
 

@@ -30,6 +30,27 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, refresh_tokens.length
   end
 
+  test "create: doesn't create multiple tokens on multiple requests" do
+    user = user_instance
+    role = role_instance
+    user.role_ids.push(role._id)
+    user.save
+
+    credentials = {email: "test@test.com", password: "testtest"}
+    post "/auth/login/", params: credentials
+    
+    assert_equal 200, @response.status
+
+    post "/auth/login/", params: credentials
+
+    assert_equal 200, @response.status
+    response = JSON.parse(@response.body)
+
+    refresh_tokens = RefreshToken.all
+
+    assert_equal 1, refresh_tokens.length
+  end
+
   test "create: returns error when email is incorrect" do
     user = user_instance
     user.save
@@ -65,21 +86,41 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     params = {token: refresh_token.token}
     post "/auth/refresh-token/", params: params
 
-    response = JSON.parse(@response.body)
+    travel_to(Time.now + 30.minutes) do
+      response = JSON.parse(@response.body)
     
-    assert_equal 200, @response.status
+      assert_equal 200, @response.status
 
-    assert response["access_token"]
-    assert response["refresh_token"]
+      assert response["access_token"]
+      assert response["refresh_token"]
 
-    tokensSaved = RefreshToken.all
-    assert_equal 1, tokensSaved.length
+      tokensSaved = RefreshToken.all
+      assert_equal 1, tokensSaved.length
 
-    prev_token = RefreshToken.find_by(token: refresh_token.token)
-    assert_not prev_token
+      assert refresh_token.token == response["refresh_token"]
 
-    current_token = RefreshToken.find_by(token: response["refresh_token"])
-    assert current_token
+      current_token = RefreshToken.find_by(token: response["refresh_token"])
+      assert current_token
+    end
+  end
+
+  test "refresh: doesn't refresh token when token expires" do
+    ENV['REFRESH_EXPIRATION_HOURS'] = "1"
+    refresh_token = refresh_token_instance
+    refresh_token.save
+
+    travel_to(Time.now + 2.hours) do
+      params = {token: refresh_token.token}
+      post "/auth/refresh-token/", params: params
+  
+      response = JSON.parse(@response.body)
+      
+      assert_equal 401, @response.status
+  
+      assert_equal "Unauthorized", response["msg"]
+      tokensSaved = RefreshToken.all
+      assert_equal 0, tokensSaved.length
+    end
   end
 
   test "refresh: doesn't refresh token when user is not found" do
@@ -93,9 +134,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     
-    assert_equal 401, @response.status
+    assert_equal 404, @response.status
 
     assert_equal "User does not exist anymore", response["msg"]
+    tokensSaved = RefreshToken.all
+    assert_equal 0, tokensSaved.length
   end
 
   test "refresh: doesn't refresh token when token not found" do
@@ -104,7 +147,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     
-    assert_equal 401, @response.status
+    assert_equal 404, @response.status
 
     assert_equal "Token not found", response["msg"]
 
@@ -118,7 +161,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     
-    assert_equal 401, @response.status
+    assert_equal 400, @response.status
 
     assert_equal "No token provided", response["msg"]
 
