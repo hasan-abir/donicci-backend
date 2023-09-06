@@ -1,4 +1,11 @@
 class UsersController < ApplicationController
+  api!
+  param :user, Hash, :required => true do
+    param :display_name, String, :required => true
+    param :username, String, :required => true
+    param :email, String, :required => true
+    param :password, String, :required => true
+  end
   def create
     emptyReqBodyMsg = "Requires 'user' in request body with fields:"
 

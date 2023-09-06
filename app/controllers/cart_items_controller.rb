@@ -8,6 +8,8 @@ class CartItemsController < ApplicationController
     end
     prepend_before_action :set_cart_item, only: [:destroy]
     
+    api!
+    header 'Authorization', 'Bearer {token}', :required => true
     def index
         user_id = request.env[:current_user]._id
 
@@ -25,6 +27,12 @@ class CartItemsController < ApplicationController
         render json: cartItems
     end
 
+    api!
+    param :item, Hash, :required => true do
+        param :product_id, String, :required => true
+        param :selected_quantity, Integer, :required => true
+    end
+    header 'Authorization', 'Bearer {token}', :required => true
     def create
         emptyReqBodyMsg = "Requires 'item' in request body with fields:"
 
@@ -69,6 +77,8 @@ class CartItemsController < ApplicationController
         end
     end
 
+    api!
+    header 'Authorization', 'Bearer {token}', :required => true
     def destroy
         user_id = request.env[:current_user]._id
 
@@ -83,6 +93,8 @@ class CartItemsController < ApplicationController
         render status: 201
     end
 
+    api!
+    header 'Authorization', 'Bearer {token}', :required => true
     def destroy_all
         user_id = request.env[:current_user]._id
 

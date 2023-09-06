@@ -10,6 +10,11 @@ class ProductsController < ApplicationController
     end
     append_before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
 
+    api!
+    param :limit, Integer
+    param :next, String
+    param :search_term, String
+    param :category_id, String
     def index
         limit = params[:limit] || 5
         next_page = params[:next] ? Time.new(params[:next]) : Time.now.utc
@@ -30,10 +35,20 @@ class ProductsController < ApplicationController
         render json: products
     end
 
+    api!
     def show
         render json: get_product_details_json(@product)
     end
 
+    api!
+    param :product, Hash, :required => true do
+        param :title, String, :required => true
+        param :description, String
+        param :image_files, Array, of: File, :required => true
+        param :price, Integer, :required => true
+        param :quantity, Integer, :required => true
+    end
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def create
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
@@ -41,7 +56,7 @@ class ProductsController < ApplicationController
         fields_required.push("image_files")
 
         for i in fields_required do
-            unless ['_id', 'created_at', 'updated_at', 'category_ids', 'images'].include? i
+            unless ['_id', 'created_at', 'updated_at', 'category_ids', 'images', 'user_rating'].include? i
                 if i == "description"
                     emptyReqBodyMsg.concat(" " + i + "(optional)")       
                 else
@@ -61,7 +76,6 @@ class ProductsController < ApplicationController
         product.image_files = params[:product][:image_files]
         product.price = params[:product][:price]
         product.quantity = params[:product][:quantity]
-        product.user_rating = params[:product][:user_rating]
 
         if product.valid?
             upload_errors = product.upload_images_save_details
@@ -78,6 +92,8 @@ class ProductsController < ApplicationController
         end
     end
 
+    api!
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def destroy
         imagekitio = ImageKitIo.client
 
@@ -92,6 +108,15 @@ class ProductsController < ApplicationController
         render status: 201
     end
 
+    api!
+    param :product, Hash, :required => true do
+        param :title, String
+        param :description, String
+        param :image_files, Array, of: File
+        param :price, Integer
+        param :quantity, Integer
+    end
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def update  
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
@@ -115,7 +140,6 @@ class ProductsController < ApplicationController
 
         @product.price = params[:product][:price].presence || @product.price
         @product.quantity = params[:product][:quantity].presence || @product.quantity
-        @product.user_rating = params[:product][:user_rating].presence || @product.user_rating
         @product.save
 
         if @product.valid?
@@ -133,6 +157,9 @@ class ProductsController < ApplicationController
         end
     end
 
+    api!
+    param :category_ids, Array, of: String
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def add_categories
         if !params[:category_ids] || params[:category_ids].class != Array
             return render json: {msg: "Requires 'category_ids' array in request body"}.to_json, status: 400
@@ -151,6 +178,9 @@ class ProductsController < ApplicationController
         render json: get_product_details_json(@product)
     end
 
+    api!
+    param :category_ids, Array, of: String
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def remove_categories
         if !params[:category_ids] || params[:category_ids].class != Array
             return render json: {msg: "Requires 'category_ids' array in request body"}.to_json, status: 400

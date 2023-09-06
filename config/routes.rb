@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "articles#index"
 
+  apipie
+
   # User authentication routes
   resources :roles, only: [:create, :destroy] do
     member do

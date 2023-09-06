@@ -25,7 +25,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
     test "create: creates product" do
         imagekitio = ImageKitIo.client
         
-        product = {title: "Product", description: "Lorem", image_files: [upload_image("pianocat.jpeg", "image/jpeg", true), upload_image("jelliecat.jpg", "image/jpeg", true)], price: 300, quantity: 1, user_rating: 0}
+        product = {title: "Product", description: "Lorem", image_files: [upload_image("pianocat.jpeg", "image/jpeg", true), upload_image("jelliecat.jpg", "image/jpeg", true)], price: 300, quantity: 1}
 
         token = generate_token("admin")
 
@@ -37,7 +37,6 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
         assert_equal product[:title], response["title"]
         assert response["price"]
         assert response["quantity"]
-        assert response["user_rating"]
         assert response["description"]
         assert_equal 2, response["images"].length
         assert response["category_list"]
@@ -62,7 +61,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
         token = generate_token("admin")
 
         travel_to(Time.now + 2.minutes) do
-            product = {title: "", description: "Lorem", image_files: [upload_image("pianocat.jpeg", "image/jpeg", true), upload_image("jelliecat.jpg", "image/jpeg", true)], price: 300, quantity: 1, user_rating: 0}
+            product = {title: "", description: "Lorem", image_files: [upload_image("pianocat.jpeg", "image/jpeg", true), upload_image("jelliecat.jpg", "image/jpeg", true)], price: 300, quantity: 1}
 
             post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
 
@@ -79,7 +78,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
         response = JSON.parse(@response.body)
         assert_equal 400, @response.status
 
-        assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity user_rating image_files", response["msg"]
+        assert_equal "Requires 'product' in request body with fields: title description(optional) price quantity image_files", response["msg"]
     
         productsSaved = Product.all
         assert_equal 0, productsSaved.length
@@ -88,7 +87,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
     test "create: doesn't create product if there is a validation error" do
         token = generate_token("admin")
 
-        product = {description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1, user_rating: 0}
+        product = {description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1}
 
         post "/products/", params: {product: product}, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
 
@@ -102,7 +101,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
     end
 
     test "create: doesn't create product if not authenticated" do
-        product = {title: "Product", description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1, user_rating: 0}
+        product = {title: "Product", description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1}
 
         token = generate_token("admin")
 
@@ -119,7 +118,7 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
 
     
     test "create: doesn't create product if insufficient role" do
-        product = {title: "Product", description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1, user_rating: 0}
+        product = {title: "Product", description: "Lorem", image_files: [upload_image("windowcat.jpg"), upload_image("jelliecat.jpg")], price: 300, quantity: 1}
 
         token = generate_token("user")
 

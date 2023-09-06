@@ -8,6 +8,9 @@ class RolesController < ApplicationController
     end
     prepend_before_action :set_role, only: [:destroy, :assign_role]
 
+    api!
+    param :role, String, :required => true
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def create
         role = Role.new
         role.name = params[:role]
@@ -21,6 +24,9 @@ class RolesController < ApplicationController
         end
     end
 
+    api!
+    param :role, String, :required => true
+    header 'Authorization', 'Bearer {admin access token}', :required => true
     def destroy
         roles_to_persist = ["ROLE_ADMIN", "ROLE_USER"]
 

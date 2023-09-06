@@ -9,7 +9,7 @@ class Product
   field :description, type: String, default: ""
   field :price, type: Integer
   field :quantity, type: Integer
-  field :user_rating, type: Float
+  field :user_rating, type: Float, default: 0
   field :images, type: Array, default: []
   has_and_belongs_to_many :categories, inverse_of: nil
   has_many :cart_items

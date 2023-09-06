@@ -6,6 +6,9 @@ class ReviewsController < ApplicationController
     before_action :authenticate_user, only: [:create, :destroy]
     prepend_before_action :set_review, only: [:destroy]
 
+    api!
+    param :limit, Integer
+    param :next, String
     def get_product_reviews
         limit = params[:limit] ? params[:limit] : 5
         nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
@@ -29,6 +32,9 @@ class ReviewsController < ApplicationController
         render json: reviews
     end
 
+    api!
+    param :description, String, :required => true
+    header 'Authorization', 'Bearer {token}', :required => true
     def create
         user_id = request.env[:current_user]._id
         product = Product.find(params[:product_id])
@@ -52,6 +58,8 @@ class ReviewsController < ApplicationController
         render json: get_review_details_json(review)
     end
 
+    api!
+    header 'Authorization', 'Bearer {token}', :required => true
     def destroy
         if @review.user_id != request.env[:current_user]._id
             return render status: 403, json: {msg: "Unauthorized"}

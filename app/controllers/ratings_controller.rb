@@ -5,6 +5,9 @@ class RatingsController < ApplicationController
 
     before_action :authenticate_user, only: [:create]
 
+    api!
+    param :product_id, String, :required => true
+    header 'Authorization', 'Bearer {token}', :required => true
     def create
         user_id = request.env[:current_user]._id
         product = Product.find(params[:product_id])

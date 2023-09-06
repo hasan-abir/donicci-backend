@@ -41,6 +41,8 @@ gem 'bcrypt', '~> 3.1.7'
 
 gem 'imagekitio'
 
+gem 'apipie-rails'
+
 gem 'dotenv-rails', require: 'dotenv/rails-now'
 
 group :test do

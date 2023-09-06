@@ -1,4 +1,7 @@
 class SessionsController < ApplicationController
+  api!
+  param :email, String, :required => true
+  param :password, String, :required => true
   def create
     user = User.find_by(email: params[:email])
 
@@ -15,6 +18,8 @@ class SessionsController < ApplicationController
     end
   end
 
+  api!
+  param :token, String, desc: "Refresh token generated at login", :required => true, :required => true
   def refresh
     unless params[:token]
       return render json: { msg: 'No token provided' }, status: 400
@@ -49,6 +54,8 @@ class SessionsController < ApplicationController
 
   end
 
+  api!
+  param :token, String, desc: "Refresh token generated at login", :required => true
   def destroy
     unless params[:token]
       return render json: { msg: 'No token provided' }, status: :unauthorized

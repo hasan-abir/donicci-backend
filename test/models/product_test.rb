@@ -22,7 +22,6 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors.full_messages.include? "Image files must be provided as an array"
     assert product.errors.full_messages.include? "Price must be provided"
     assert product.errors.full_messages.include? "Quantity must be provided"
-    assert product.errors.full_messages.include? "User rating must be provided"
 
     assert_equal 0, Product.all.length
   end
