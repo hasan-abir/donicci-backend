@@ -6,39 +6,11 @@ class RolesController < ApplicationController
     before_action :authenticate_user do
         check_for_roles(["ROLE_ADMIN"])
     end
-    prepend_before_action :set_role, only: [:destroy, :assign_role]
+    prepend_before_action :set_role
 
     api!
-    param :role, String, :required => true
+    param :username, String, :required => true
     header 'Authorization', 'Bearer {admin access token}', :required => true
-    def create
-        role = Role.new
-        role.name = params[:role]
-
-        role.save
-
-        if role.errors.full_messages.length > 0
-            render status: 400, json: {msgs: role.errors.full_messages}
-        else
-            render json: {msg: "Role added"}
-        end
-    end
-
-    api!
-    param :role, String, :required => true
-    header 'Authorization', 'Bearer {admin access token}', :required => true
-    def destroy
-        roles_to_persist = ["ROLE_ADMIN", "ROLE_USER"]
-
-        if roles_to_persist.include? @role.name
-            return render status: 400, json: {msg: "Role " + @role.name + " is required for the app"}
-        end
-
-        @role.destroy
-
-        render status: 201
-    end
-
     def assign_role
         user = User.where(username: params[:username]).first
 

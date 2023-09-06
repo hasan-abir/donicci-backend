@@ -8,8 +8,6 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     
     role_admin = role_instance("role_admin")
     role_admin.save
-    role_mod = role_instance("role_moderator")
-    role_mod.save
     role_user = role_instance
     role_user.save
 

@@ -4,7 +4,7 @@ class CartItemsController < ApplicationController
     include JwtAuthentication
 
     before_action :authenticate_user do
-        check_for_roles(["ROLE_ADMIN", "ROLE_MODERATOR", "ROLE_USER"])
+        check_for_roles(["ROLE_ADMIN", "ROLE_USER"])
     end
     prepend_before_action :set_cart_item, only: [:destroy]
     

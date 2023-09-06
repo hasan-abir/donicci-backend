@@ -33,10 +33,6 @@ def generate_token (type = "user")
           role_admin = Role.where(name: "ROLE_ADMIN").first
           user.role_ids.push(role_admin._id)
 
-      when "mod"
-          role_mod = Role.where(name: "ROLE_MODERATOR").first
-          user.role_ids.push(role_mod._id)
-
       else
           role_user = Role.where(name: "ROLE_USER").first
           user.role_ids.push(role_user._id)

@@ -4,7 +4,7 @@ class CategoriesController < ApplicationController
     include JwtAuthentication
 
     before_action :authenticate_user, only: [:create, :destroy, :update] do
-        check_for_roles(["ROLE_ADMIN", "ROLE_MODERATOR"])
+        check_for_roles(["ROLE_ADMIN"])
     end
     prepend_before_action :set_category, only: [:show, :destroy, :update]
     

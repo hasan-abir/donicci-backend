@@ -8,8 +8,6 @@ class RatingsControllerTest < ActionDispatch::IntegrationTest
     
     role_admin = role_instance("role_admin")
     role_admin.save
-    role_admin = role_instance("role_moderator")
-    role_admin.save
     role_user = role_instance
     role_user.save
 

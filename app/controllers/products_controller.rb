@@ -6,7 +6,7 @@ class ProductsController < ApplicationController
     include ImagekitHelper
 
     before_action :authenticate_user, only: [:create, :destroy, :update, :add_categories, :remove_categories] do
-        check_for_roles(["ROLE_ADMIN", "ROLE_MODERATOR"])
+        check_for_roles(["ROLE_ADMIN"])
     end
     append_before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
 

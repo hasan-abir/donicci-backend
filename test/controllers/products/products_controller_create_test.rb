@@ -8,8 +8,6 @@ class ProductsControllerCreateTest < ActionDispatch::IntegrationTest
         
         role_admin = role_instance("ROLE_ADMIN")
         role_admin.save
-        role_mod = role_instance("ROLE_MODERATOR")
-        role_mod.save
         role_user = role_instance("ROLE_USER")
         role_user.save
 
