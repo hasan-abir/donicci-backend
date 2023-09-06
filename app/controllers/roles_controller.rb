@@ -9,7 +9,6 @@ class RolesController < ApplicationController
     prepend_before_action :set_role
 
     api!
-    param :username, String, :required => true
     header 'Authorization', 'Bearer {admin access token}', :required => true
     def assign_role
         user = User.where(username: params[:username]).first
