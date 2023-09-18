@@ -1,4 +1,16 @@
+require "jwt_authentication"
+
 class UsersController < ApplicationController
+  include JwtAuthentication
+  before_action :authenticate_user, only: [:show]
+
+  api!
+  header 'Authorization', 'Bearer {token}', :required => true
+  def show
+    current_user = request.env[:current_user]
+    render json: current_user.to_json(only: [:username, :display_name])
+  end
+
   api!
   param :user, Hash, :required => true do
     param :display_name, String, :required => true
@@ -34,7 +46,26 @@ class UsersController < ApplicationController
     if user.errors.full_messages.length > 0
         render json: {msgs: user.errors.full_messages}.to_json, status: 400
     else
-        render json: user.as_json(except: [:_id, :created_at, :updated_at, :password_digest])
+        access_token = JWT.encode({ user_id: user._id, exp: token_expiration_times()[:access] }, Rails.application.secret_key_base)
+
+        refresh_token_obj = refresh_token_instance(user._id)
+        refresh_token_obj.save
+
+        render json: { access_token: access_token, refresh_token: refresh_token_obj.token }
     end
+  end
+
+  def refresh_token_instance(user_id) 
+    refresh_token = RefreshToken.find_or_create_by(user_id: user_id)
+    refresh_token.token = JWT.encode({ user_id: user_id, exp: token_expiration_times()[:refresh] }, Rails.application.secret_key_base)
+
+    refresh_token
+  end
+
+  def token_expiration_times
+    times = {
+      access: Time.now.to_i + ENV['ACCESS_EXPIRATION_SECONDS'].to_i,
+      refresh: Time.now.to_i + ENV['REFRESH_EXPIRATION_HOURS'].to_i * 3600      
+    }
   end
 end

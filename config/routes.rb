@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   end
 
   scope path: '/auth' do
+    get '/currentuser', to: 'users#show'
     post '/register', to: 'users#create'
     post '/login', to: 'sessions#create'
     post '/refresh-token', to: 'sessions#refresh'

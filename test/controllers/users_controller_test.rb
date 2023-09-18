@@ -9,6 +9,39 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     DatabaseCleaner[:mongoid].clean
   end
 
+  test "show: get current user" do
+    user = user_instance
+    role = role_instance
+    role.save
+    user.role_ids.push(role._id)
+    user.save
+
+    token = generate_token
+
+    get "/auth/currentuser/", headers: { "HTTP_AUTHORIZATION" => "Bearer " + token, "Content-Type" => "multipart/form-data" }
+
+    response = JSON.parse(@response.body)
+
+    assert_equal 200, @response.status
+    assert_equal user.username, response["username"]
+    assert_equal user.display_name, response["display_name"]
+    assert_equal 2, response.length
+
+    usersSaved = User.all
+    rolesSaved = Role.all
+    assert_equal 1, usersSaved.length
+    assert_equal 1, rolesSaved.length
+  end
+
+  test "show: doesn't get user if unauthenticated" do
+    get "/auth/currentuser/"
+
+    response = JSON.parse(@response.body)
+
+    assert_equal 401, @response.status
+    assert_equal "Unauthenticated", response["msg"]
+  end
+
   test "create: saves user" do
     role = role_instance
     role.save
@@ -19,12 +52,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 200, @response.status
-    assert_equal user[:username], response["username"]
-    assert_equal user[:email], response["email"]
-    assert_not response["_id"]
-    assert_not response["updated_at"]
-    assert_not response["created_at"]
-    assert_not response["password_digest"]
+    assert response["access_token"]
+    assert response["refresh_token"]
 
     usersSaved = User.all
     rolesSaved = Role.all
@@ -39,12 +68,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 200, @response.status
-    assert_equal user[:username], response["username"]
-    assert_equal user[:email], response["email"]
-    assert_not response["_id"]
-    assert_not response["updated_at"]
-    assert_not response["created_at"]
-    assert_not response["password_digest"]
+    assert response["access_token"]
+    assert response["refresh_token"]
 
     usersSaved = User.all
     rolesSaved = Role.all
