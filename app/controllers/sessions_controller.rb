@@ -1,4 +1,10 @@
+require "jwt_authentication"
+
 class SessionsController < ApplicationController
+  include JwtAuthentication
+
+  before_action :authenticate_user, only: [:destroy]
+
   api!
   param :email, String, :required => true
   param :password, String, :required => true
@@ -55,16 +61,14 @@ class SessionsController < ApplicationController
   end
 
   api!
-  param :token, String, desc: "Refresh token generated at login", :required => true
+  header 'Authorization', 'Bearer {token}', :required => true
   def destroy
-    unless params[:token]
-      return render json: { msg: 'No token provided' }, status: :unauthorized
-    end
+    user_id = request.env[:current_user]._id
 
-    refresh_token = RefreshToken.find_by(token: params[:token])    
+    refresh_token = RefreshToken.where(user_id: user_id).first
 
     unless refresh_token
-      return render json: { msg: 'Token not found' }, status: :unauthorized
+      return render json: { msg: 'Refresh token not found' }, status: :unauthorized
     end
 
     refresh_token.destroy

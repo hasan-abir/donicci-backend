@@ -83,6 +83,7 @@ end
   def refresh_token_instance() 
     user = user_instance
     role = role_instance
+    role.save
     refresh_token = RefreshToken.new
     refresh_token.token = JWT.encode({ user_id: user._id, exp: Time.now.to_i + ENV['REFRESH_EXPIRATION_HOURS'].to_i * 3600 }, Rails.application.secret_key_base)
 

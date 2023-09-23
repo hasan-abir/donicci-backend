@@ -170,11 +170,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy: does logout user" do
-    refresh_token = refresh_token_instance
-    refresh_token.save
+    refresh_token_instance.save
 
-    params = {token: refresh_token.token}
-    delete "/auth/logout/", params: params
+    token = generate_token
+
+    delete "/auth/logout/", headers: {"HTTP_AUTHORIZATION": "Bearer " + token}
 
     assert_equal 201, @response.status
 
@@ -182,14 +182,20 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, tokensSaved.length
   end
 
-  test "destroy: doesn't logout user when token not found" do
-    params = {token: "123"}
-    delete "/auth/logout/", params: params
+  test "destroy: doesn't logout user when refresh token not found" do
+    refresh_token = refresh_token_instance
+    refresh_token.save
+    
+    token = generate_token
+
+    refresh_token.destroy
+
+    delete "/auth/logout/", headers: {"HTTP_AUTHORIZATION": "Bearer " + token}
 
     response = JSON.parse(@response.body)
 
     assert_equal 401, @response.status
-    assert_equal "Token not found", response["msg"]
+    assert_equal "Refresh token not found", response["msg"]
     
 
     tokensSaved = RefreshToken.all
@@ -197,16 +203,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy: doesn't logout user without token" do
-    params = {}
-    delete "/auth/logout/", params: params
+    delete "/auth/logout/"
 
     response = JSON.parse(@response.body)
 
     assert_equal 401, @response.status
-    assert_equal "No token provided", response["msg"]
-    
-
-    tokensSaved = RefreshToken.all
-    assert_equal 0, tokensSaved.length
+    assert_equal "Unauthenticated", response["msg"]
   end
 end
