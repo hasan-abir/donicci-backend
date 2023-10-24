@@ -10,11 +10,20 @@ class ProductsController < ApplicationController
     end
     append_before_action :set_product, only: [:show, :destroy, :update, :add_categories, :remove_categories]
 
+    def_param_group :product do
+        property :_id, String
+        property :images, :array_of => Hash
+        property :price, Integer
+        property :title, String
+        property :user_rating, Integer
+    end
+
     api!
     param :limit, Integer
     param :next, String
     param :search_term, String
     param :category_id, String
+    returns :array_of => :product, :code => 200
     def index
         limit = params[:limit] || 5
         next_page = params[:next] ? Time.new(params[:next]) : Time.now.utc
@@ -36,6 +45,7 @@ class ProductsController < ApplicationController
     end
 
     api!
+    returns :product, :code => 200
     def show
         render json: get_product_details_json(@product)
     end
@@ -49,6 +59,7 @@ class ProductsController < ApplicationController
         param :quantity, Integer, :required => true
     end
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :product, :code => 200
     def create
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
@@ -117,6 +128,7 @@ class ProductsController < ApplicationController
         param :quantity, Integer
     end
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :product, :code => 200
     def update  
         emptyReqBodyMsg = "Requires 'product' in request body with fields:"
 
@@ -160,6 +172,7 @@ class ProductsController < ApplicationController
     api!
     param :category_ids, Array, of: String
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :product, :code => 200
     def add_categories
         if !params[:category_ids] || params[:category_ids].class != Array
             return render json: {msg: "Requires 'category_ids' array in request body"}.to_json, status: 400
@@ -181,6 +194,7 @@ class ProductsController < ApplicationController
     api!
     param :category_ids, Array, of: String
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :product, :code => 200
     def remove_categories
         if !params[:category_ids] || params[:category_ids].class != Array
             return render json: {msg: "Requires 'category_ids' array in request body"}.to_json, status: 400

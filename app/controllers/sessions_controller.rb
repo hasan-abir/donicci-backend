@@ -5,9 +5,15 @@ class SessionsController < ApplicationController
 
   before_action :authenticate_user, only: [:destroy]
 
+  def_param_group :tokens do
+    property :access_token, String
+    property :refresh_token, String
+  end
+
   api!
   param :email, String, :required => true
   param :password, String, :required => true
+  returns :tokens, :code => 200
   def create
     user = User.find_by(email: params[:email])
 
@@ -26,6 +32,7 @@ class SessionsController < ApplicationController
 
   api!
   param :token, String, desc: "Refresh token generated at login", :required => true, :required => true
+  returns :tokens, :code => 200
   def refresh
     unless params[:token]
       return render json: { msg: 'No token provided' }, status: 400

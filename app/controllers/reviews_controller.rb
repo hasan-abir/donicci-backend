@@ -6,9 +6,17 @@ class ReviewsController < ApplicationController
     before_action :authenticate_user, only: [:create, :destroy]
     prepend_before_action :set_review, only: [:destroy]
 
+    def_param_group :review do
+        property :_id, String
+        property :description, String
+        property :author, String
+    end
+
     api!
+    param :product_id, String, :required => true
     param :limit, Integer
-    param :next, String
+    param :next, String 
+    returns :array_of => :review, :code => 200
     def get_product_reviews
         limit = params[:limit] ? params[:limit] : 5
         nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
@@ -33,8 +41,10 @@ class ReviewsController < ApplicationController
     end
 
     api!
+    param :product_id, String, :required => true
     param :description, String, :required => true
     header 'Authorization', 'Bearer {token}', :required => true
+    returns :review, :code => 200
     def create
         user_id = request.env[:current_user]._id
         product = Product.find(params[:product_id])

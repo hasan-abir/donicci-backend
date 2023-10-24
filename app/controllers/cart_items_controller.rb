@@ -7,9 +7,20 @@ class CartItemsController < ApplicationController
         check_for_roles(["ROLE_ADMIN", "ROLE_USER"])
     end
     prepend_before_action :set_cart_item, only: [:destroy]
+
+
+    def_param_group :cart_item do
+        property :_id, String
+        property :selected_quantity, Integer
+        property :product_image, Hash
+        property :product_title, String
+        property :product_price, Integer
+        property :product_quantity, Integer
+    end
     
     api!
     header 'Authorization', 'Bearer {token}', :required => true
+    returns :array_of => :cart_item, :code => 200
     def index
         user_id = request.env[:current_user]._id
 
@@ -33,6 +44,7 @@ class CartItemsController < ApplicationController
         param :selected_quantity, Integer, :required => true
     end
     header 'Authorization', 'Bearer {token}', :required => true
+    returns :cart_item, :code => 200
     def create
         emptyReqBodyMsg = "Requires 'item' in request body with fields:"
 

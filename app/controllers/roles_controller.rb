@@ -8,8 +8,13 @@ class RolesController < ApplicationController
     end
     prepend_before_action :set_role
 
+    def_param_group :message do
+        property :msg, String
+    end
+
     api!
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :message, :code => 200
     def assign_role
         user = User.where(username: params[:username]).first
 

@@ -4,8 +4,19 @@ class UsersController < ApplicationController
   include JwtAuthentication
   before_action :authenticate_user, only: [:show]
 
+  def_param_group :user do
+    property :username, String
+    property :display_name, String
+  end
+
+  def_param_group :tokens do
+    property :access_token, String
+    property :refresh_token, String
+  end
+
   api!
   header 'Authorization', 'Bearer {token}', :required => true
+  returns :user, :code => 200
   def show
     current_user = request.env[:current_user]
     render json: current_user.to_json(only: [:username, :display_name])
@@ -18,6 +29,7 @@ class UsersController < ApplicationController
     param :email, String, :required => true
     param :password, String, :required => true
   end
+  returns :tokens, :code => 200
   def create
     emptyReqBodyMsg = "Requires 'user' in request body with fields:"
 

@@ -7,21 +7,29 @@ class CategoriesController < ApplicationController
         check_for_roles(["ROLE_ADMIN"])
     end
     prepend_before_action :set_category, only: [:show, :destroy, :update]
+
+    def_param_group :category do
+        property :_id, String
+        property :name, String
+    end
     
     api!
     param :limit, Integer
     param :next, String
+    returns :array_of => :category, :code => 200
     def index 
         limit = params[:limit] ? params[:limit] : 5
         nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
 
-        categories = Category.where(:updated_at.lt => nextPage).limit(limit).order_by(updated_at: "desc")
+        categories = Category.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :name).order_by(updated_at: "desc")
+
         render json: categories
     end
 
     api!
+    returns :category, :code => 200
     def show 
-        render json: @category
+        render json: get_category_details_json(@category)
     end
 
     api!
@@ -29,6 +37,7 @@ class CategoriesController < ApplicationController
         param :name, String, :required => true
     end
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :category, :code => 200
     def create
         unless params[:category]
             return render json: {msg: "Requires 'category' in request body"}.to_json, status: 400
@@ -42,7 +51,7 @@ class CategoriesController < ApplicationController
         if category.errors.full_messages.length > 0
             render json: {msgs: category.errors.full_messages}.to_json, status: 400
         else
-            render json: category
+            render json: get_category_details_json(category)
         end
     end
 
@@ -59,6 +68,7 @@ class CategoriesController < ApplicationController
         param :name, String
     end
     header 'Authorization', 'Bearer {admin access token}', :required => true
+    returns :category, :code => 200
     def update 
         unless params[:category]
             return render json: {msg: "Requires 'category' in request body"}.to_json, status: 400
@@ -71,8 +81,12 @@ class CategoriesController < ApplicationController
         if @category.errors.full_messages.length > 0
             render json: {msgs: @category.errors.full_messages}.to_json, status: 400
         else
-            render json: @category
+            render json: get_category_details_json(@category)
         end
+    end
+
+    def get_category_details_json(category)
+        category.to_json(only: [:_id, :name])
     end
 
     def set_category

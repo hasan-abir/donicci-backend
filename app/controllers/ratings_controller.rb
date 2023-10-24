@@ -5,9 +5,15 @@ class RatingsController < ApplicationController
 
     before_action :authenticate_user, only: [:create]
 
+    def_param_group :score do
+        property :average_score, Integer
+    end
+
     api!
     param :product_id, String, :required => true
+    param :score, Integer, :required => true
     header 'Authorization', 'Bearer {token}', :required => true
+    returns :score, :code => 200
     def create
         user_id = request.env[:current_user]._id
         product = Product.find(params[:product_id])
