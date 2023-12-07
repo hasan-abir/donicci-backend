@@ -12,6 +12,7 @@ class CartItemsController < ApplicationController
     def_param_group :cart_item do
         property :_id, String
         property :selected_quantity, Integer
+        property :product_id, String
         property :product_image, Hash
         property :product_title, String
         property :product_price, Integer
@@ -27,11 +28,11 @@ class CartItemsController < ApplicationController
         cartItems = CartItem.where(user_id: user_id).only(:_id, :selected_quantity, :product_id)
 
         cartItems = cartItems.map do |cart_item|
+            cart_item.attributes["product_id"] = cart_item.product._id
             cart_item.attributes["product_image"] = cart_item.product.images[0]
             cart_item.attributes["product_title"] = cart_item.product.title
             cart_item.attributes["product_price"] = cart_item.product.price
             cart_item.attributes["product_quantity"] = cart_item.product.quantity
-            cart_item.attributes.delete("product_id")
             cart_item.attributes
         end
 
@@ -115,7 +116,23 @@ class CartItemsController < ApplicationController
         render status: 201
     end
 
+    api!
+    header 'Authorization', 'Bearer {token}', :required => true
+    def is_in_cart
+        user_id = request.env[:current_user]._id
+        product_id = params[:product_id]
+
+        cartItemExists = CartItem.where(user_id: user_id, product_id: product_id).exists?
+
+        if cartItemExists
+            render status: 201
+        else 
+            render status: 404
+        end
+    end
+
     def get_cart_item_details_json(cart_item)
+        cart_item.attributes["product_id"] = cart_item.product._id
         cart_item.attributes["product_image"] = cart_item.product.images[0]
         cart_item.attributes["product_title"] = cart_item.product.title
         cart_item.attributes["product_price"] = cart_item.product.price

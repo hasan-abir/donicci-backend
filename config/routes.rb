@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   resources :cart_items, path: "/cart", only: [:index, :create, :destroy] do
     collection do
       delete "/all", to: "cart_items#destroy_all"
+      get "/is-in-cart/:product_id", to: "cart_items#is_in_cart"
     end
   end
   resources :ratings, only: [:create]

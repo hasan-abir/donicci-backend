@@ -55,11 +55,11 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 200, @response.status
     assert_equal 5, response.length
     assert response.first["_id"]
+    assert response.first["product_id"]
     assert response.first["product_title"]
     assert response.first["product_price"]
     assert response.first["product_quantity"]
     assert response.first["selected_quantity"]
-    assert_not response.first["product_id"] 
   end
 
   test "index: gets empty result" do
@@ -369,5 +369,49 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     cartItems = CartItem.all
     assert_equal 6, cartItems.length
+  end
+
+  test "is_in_cart: returns 201 when item is found" do
+    author = User.where(username: "hasan_abir1999").first
+    product = product_instance
+    product.save
+
+    cartItem = cart_item_instance(1)
+
+    cartItem.product_id = product._id
+    cartItem.user_id = author._id
+
+    cartItem.save
+
+    token = generate_token
+
+    get "/cart/is-in-cart/" + product._id, headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+
+    assert_equal 201, @response.status
+
+    cartItems = CartItem.all
+    assert_equal 1, cartItems.length
+  end
+
+  test "is_in_cart: returns 404 when item is not found" do
+    token = generate_token
+
+    get "/cart/is-in-cart/123", headers: { "HTTP_AUTHORIZATION" => "Bearer " + token }
+
+    assert_equal 404, @response.status
+
+    cartItems = CartItem.all
+    assert_equal 0, cartItems.length
+  end
+
+  test "is_in_cart: returns 401 without authentication" do
+    token = generate_token
+
+    get "/cart/is-in-cart/123"
+
+    assert_equal 401, @response.status
+
+    cartItems = CartItem.all
+    assert_equal 0, cartItems.length
   end
 end
