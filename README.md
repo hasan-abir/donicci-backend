@@ -1,24 +1,6 @@
-# README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+# Donicci backend
 
-Things you may want to cover:
+A Ruby on Rails demo backend app for my portfolio which provides data and authentication services to the client version of the app.
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+It is deployed and running at onrender.com:- [Live site (with docs)](https://donicci-backend.onrender.com/).
