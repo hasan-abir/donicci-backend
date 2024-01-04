@@ -50,6 +50,7 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_not response.first["user_id"]
     assert_equal "Review 10", response.first["description"]
     assert_equal "Review 6", response.last["description"]
+    assert response.first["updated_at"]
   end
 
   test "get_product_reviews: paginates results next page" do

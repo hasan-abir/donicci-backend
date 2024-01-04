@@ -12,16 +12,21 @@ class CategoriesController < ApplicationController
         property :_id, String
         property :name, String
     end
+
+    def_param_group :category_in_list do
+        param_group :category
+        property :updated_at, String
+    end
     
     api!
     param :limit, Integer
     param :next, String
-    returns :array_of => :category, :code => 200
+    returns :array_of => :category_in_list, :code => 200
     def index 
         limit = params[:limit] ? params[:limit] : 5
         nextPage = params[:next] ? Time.new(params[:next]) : Time.now.utc
 
-        categories = Category.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :name).order_by(updated_at: "desc")
+        categories = Category.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :name, :updated_at).order_by(updated_at: "desc")
 
         render json: categories
     end

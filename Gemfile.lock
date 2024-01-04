@@ -91,7 +91,9 @@ GEM
       database_cleaner-core (~> 2.0.0)
       mongoid
     date (3.3.3)
-    debug (1.7.1)
+    debug (1.9.1)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     dotenv (2.8.1)
@@ -116,6 +118,10 @@ GEM
       carrierwave (>= 0.7, < 2.2)
       multipart-post (>= 2.1.0)
       rest-client (~> 2.1, >= 2.1)
+    io-console (0.7.1)
+    irb (1.11.0)
+      rdoc
+      reline (>= 0.3.8)
     jwt (2.7.0)
     loofah (2.19.1)
       crass (~> 1.0.2)
@@ -135,6 +141,7 @@ GEM
       rake
     mini_magick (4.12.0)
     mini_mime (1.1.2)
+    mini_portile2 (2.8.5)
     minitest (5.17.0)
     mongo (2.18.2)
       bson (>= 4.14.1, < 5.0.0)
@@ -155,8 +162,11 @@ GEM
       net-protocol
     netrc (0.11.0)
     nio4r (2.5.8)
-    nokogiri (1.14.2-x86_64-linux)
+    nokogiri (1.14.2)
+      mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
+    psych (5.1.2)
+      stringio
     public_suffix (5.0.3)
     puma (5.6.5)
       nio4r (~> 2.0)
@@ -191,6 +201,10 @@ GEM
       thor (~> 1.0)
       zeitwerk (~> 2.5)
     rake (13.0.6)
+    rdoc (6.6.2)
+      psych (>= 4.0.0)
+    reline (0.4.1)
+      io-console (~> 0.5)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
       http-cookie (>= 1.0.2, < 2.0)
@@ -200,6 +214,7 @@ GEM
       ffi (~> 1.12)
     ruby2_keywords (0.0.5)
     ssrf_filter (1.1.1)
+    stringio (3.1.0)
     thor (1.2.1)
     timeout (0.3.2)
     tzinfo (2.0.6)
@@ -230,7 +245,7 @@ DEPENDENCIES
   tzinfo-data
 
 RUBY VERSION
-   ruby 3.2.2p53
+   ruby 3.3.0p0
 
 BUNDLED WITH
    2.4.6

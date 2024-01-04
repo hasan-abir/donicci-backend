@@ -18,12 +18,17 @@ class ProductsController < ApplicationController
         property :user_rating, Integer
     end
 
+    def_param_group :product_in_list do
+        param_group :product
+        property :updated_at, String
+    end
+
     api!
     param :limit, Integer
     param :next, String
     param :search_term, String
     param :category_id, String
-    returns :array_of => :product, :code => 200
+    returns :array_of => :product_in_list, :code => 200
     def index
         limit = params[:limit] || 5
         next_page = params[:next] ? Time.new(params[:next]) : Time.now.utc
@@ -36,9 +41,9 @@ class ProductsController < ApplicationController
         where_arguments[:category_ids] = category_id if category_id
 
         if search_term
-            products = Product.text_search(search_term).where(where_arguments).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
+            products = Product.text_search(search_term).where(where_arguments).limit(limit).only(:_id, :title, :price, :images, :user_rating, :updated_at).order_by(updated_at: "desc")
         else
-            products = Product.where(where_arguments).limit(limit).only(:_id, :title, :price, :images, :user_rating).order_by(updated_at: "desc")
+            products = Product.where(where_arguments).limit(limit).only(:_id, :title, :price, :images, :user_rating, :updated_at).order_by(updated_at: "desc")
         end
 
         render json: products
@@ -216,7 +221,7 @@ class ProductsController < ApplicationController
     def get_product_details_json(product)
         product[:category_list] = product.categories.only(:_id, :name)
 
-        product.to_json(only: [:_id, :title, :price, :quantity, :description, :user_rating, :images, :category_list])
+        product.to_json(only: [:_id, :title, :price, :quantity, :description, :user_rating, :images, :category_list, :updated_at.lt])
     end
 
     def set_product

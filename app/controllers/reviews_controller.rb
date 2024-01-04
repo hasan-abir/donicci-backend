@@ -10,6 +10,12 @@ class ReviewsController < ApplicationController
         property :_id, String
         property :description, String
         property :author, String
+        property :updated_at, String
+    end
+
+    def_param_group :review_in_list do
+        param_group :review
+        property :updated_at, String
     end
 
     api!
@@ -27,7 +33,7 @@ class ReviewsController < ApplicationController
             return render status: 404, json: {msg: "Product not found"}
         end
 
-        reviews = Review.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :description, :user_id).order_by(updated_at: "desc")
+        reviews = Review.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :description, :user_id, :updated_at).order_by(updated_at: "desc")
 
         reviews = reviews.map do |review|
             review.attributes["author"] = review.user.display_name

@@ -35,6 +35,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 5, response.length
     assert_equal "category: 10", response.first["name"]
     assert_equal "category: 6", response.last["name"]
+    assert response.first["updated_at"]
   end
 
   

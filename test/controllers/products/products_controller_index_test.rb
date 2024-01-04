@@ -29,6 +29,7 @@ class ProductsControllerIndexTest < ActionDispatch::IntegrationTest
     assert response.first["images"]
     assert response.first["price"]
     assert response.first["user_rating"]
+    assert response.first["updated_at"]
   end
 
   test "index: paginated results with both category_id and search text" do
