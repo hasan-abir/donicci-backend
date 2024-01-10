@@ -12,16 +12,16 @@ module JwtAuthentication
               user = User.find(payload['user_id'])
 
               unless user
-                  return unauthenticated_response
+                  return unauthenticated_response("User not found")
               end
 
               request.env[:current_user] = user
           rescue JWT::DecodeError, JWT::VerificationError, JWT::ExpiredSignature
               # Invalid token
-              return unauthenticated_response
+              return unauthenticated_response("Invalid token")
           end
       else
-          return unauthenticated_response
+          return unauthenticated_response("No token provided")
       end
     end
 
@@ -56,8 +56,8 @@ module JwtAuthentication
         JWT.decode(token, Rails.application.secret_key_base).first
     end
 
-    def unauthenticated_response
-        render json: { msg: 'Unauthenticated' }.to_json, status: 401
+    def unauthenticated_response(msg='Unauthenticated')
+        render json: { msg: msg }.to_json, status: 401
     end
 
     def unauthorized_response
