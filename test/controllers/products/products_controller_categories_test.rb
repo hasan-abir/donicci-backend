@@ -52,7 +52,7 @@ class ProductsControllerCategoriesTest < ActionDispatch::IntegrationTest
         response = JSON.parse(@response.body)
 
         assert_equal 401, @response.status
-        assert_equal "Unauthenticated", response["msg"]
+        assert_equal "No token provided", response["msg"]
     end
 
     test "add_categories: doesn't add categories to product as user" do
@@ -117,7 +117,7 @@ class ProductsControllerCategoriesTest < ActionDispatch::IntegrationTest
         response = JSON.parse(@response.body)
 
         assert_equal 401, @response.status
-        assert_equal "Unauthenticated", response["msg"]
+        assert_equal "No token provided", response["msg"]
     end
 
     test "remove_categories: doesn't remove categories from product as user" do

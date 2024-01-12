@@ -145,7 +145,7 @@ class RatingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 401, @response.status
 
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     assert_equal 0, Rating.all.length
     assert_equal 0, Product.first.ratings.length

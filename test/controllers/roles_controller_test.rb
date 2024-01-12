@@ -56,7 +56,7 @@ class RolesControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     savedUser = User.where(username: user.username).first
 

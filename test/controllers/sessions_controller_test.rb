@@ -208,6 +208,6 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
   end
 end

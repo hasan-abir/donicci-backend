@@ -22,34 +22,45 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
 
   test "get_product_reviews: paginates results" do
     product = product_instance
+    other_product = product_instance
+    other_product.save
     product.save
 
     user = User.where(username: "hasan_abir1999").first
 
     x = 1
 
-    while(x <= 10)
+    while(x <= 20)
       review = review_instance("Review " + x.to_s)
 
+      if x.odd? 
+        review.product_id = other_product._id
+      else 
+        review.product_id = product._id
+      end
+      
       review.user_id = user._id
-      review.product_id = product._id
 
       review.save
 
       x = x + 1
     end
 
-    assert_equal 10, Review.all.length
+    assert_equal 20, Review.all.length
 
     get "/reviews/product/" + product._id
 
     response = JSON.parse(@response.body)
     assert_equal 200, @response.status
     assert_equal 5, response.length
+    lastReview = Review.find(response.first["_id"])
+    secondLastReview = Review.find(response[1]["_id"])
+    assert_equal product._id, lastReview[:product_id]
+    assert_equal product._id, secondLastReview[:product_id]
     assert_equal user.display_name, response.first["author"]
     assert_not response.first["user_id"]
-    assert_equal "Review 10", response.first["description"]
-    assert_equal "Review 6", response.last["description"]
+    assert_equal "Review 20", response.first["description"]
+    assert_equal "Review 12", response.last["description"]
     assert response.first["updated_at"]
   end
 
@@ -186,7 +197,7 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     assert_equal 0, Review.all.length
   end
@@ -268,7 +279,7 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
     response = JSON.parse(@response.body)
 
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     assert_equal 1, Review.all.length
   end

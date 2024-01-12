@@ -102,7 +102,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
   end
 
   test "create: creates cart item" do
@@ -195,7 +195,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     cartItems = CartItem.all
     assert_equal 0, cartItems.length
@@ -252,7 +252,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     cartItems = CartItem.all
     assert_equal 1, cartItems.length
@@ -365,7 +365,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     response = JSON.parse(@response.body)
     assert_equal 401, @response.status
-    assert_equal "Unauthenticated", response["msg"]
+    assert_equal "No token provided", response["msg"]
 
     cartItems = CartItem.all
     assert_equal 6, cartItems.length

@@ -33,7 +33,7 @@ class ReviewsController < ApplicationController
             return render status: 404, json: {msg: "Product not found"}
         end
 
-        reviews = Review.where(:updated_at.lt => nextPage).limit(limit).only(:_id, :description, :user_id, :updated_at).order_by(updated_at: "desc")
+        reviews = Review.where(:product_id => product._id, :updated_at.lt => nextPage).limit(limit).only(:_id, :description, :user_id, :updated_at).order_by(updated_at: "desc")
 
         reviews = reviews.map do |review|
             review.attributes["author"] = review.user.display_name
